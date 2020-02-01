@@ -1,7 +1,5 @@
 <?php
 
-ini_set('xdebug.overload_var_dump', '1');
-
 return [
 
     /*
@@ -67,7 +65,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => 'Europe/Kiev',
 
     /*
     |--------------------------------------------------------------------------

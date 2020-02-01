@@ -5,20 +5,25 @@ namespace App\Http\Controllers\Admin;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
+use App\Category;
+use App\Traits\Helper;
+
 class CategoryController extends Controller
 {
-	// public function __call($method, $arguments)
-	// {
-		// dd($method, $arguments);
-	// }
+	use Helper;
+	
+	private $routeIndex 	= 'categories.index';
+	private $viewRoot 		= 'admin.categories';
+	
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        echo __METHOD__;
+		// return $this->view('index', ['categories' => Category::all()]);
+		return view('admin.categories.index', ['categories' => Category::all()]);
     }
 
     /**
@@ -39,7 +44,13 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        //
+		self::valid($request);
+		
+		(new Category)
+			->fill($request->all())
+			->save();
+		
+		return $this->i();
     }
 
     /**
@@ -50,7 +61,7 @@ class CategoryController extends Controller
      */
     public function show($id)
     {
-        //
+        echo $id;
     }
 
     /**
@@ -61,7 +72,11 @@ class CategoryController extends Controller
      */
     public function edit($id)
     {
-        //
+		if (!$category = Category::find($id)) {
+			return $this->i();
+		}
+		
+        return view('admin.categories.edit', compact('category'));
     }
 
     /**
@@ -73,7 +88,15 @@ class CategoryController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        self::valid($request);
+		
+		if (!$category = Category::find($id)) {
+			return $this->i();
+		}
+		
+		$category->fill($request->all())->save();
+		
+		return $this->i();
     }
 
     /**
@@ -84,6 +107,19 @@ class CategoryController extends Controller
      */
     public function destroy($id)
     {
-        //
+		if (!$category = Category::find($id)) {
+			return $this->i();
+		}
+		
+		Category::find($id)->delete();
+		
+		return $this->i();
     }
+	
+	private static function valid(Request $request)
+	{
+		$request->validate([
+			'name'	=> 'required'
+		]);
+	}
 }
