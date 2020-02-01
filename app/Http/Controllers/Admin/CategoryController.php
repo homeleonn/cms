@@ -23,7 +23,11 @@ class CategoryController extends Controller
     public function index(Request $request)
     {
 		// return $this->view('index', ['categories' => Category::all()]);
-		return view('admin.categories.index', ['categories' => Category::all()]);
+		
+		return view('admin.categories.index', [
+			'categories' => Category::all(), 
+			'title' => 'Список категорий'
+		]);
     }
 
     /**
@@ -111,7 +115,7 @@ class CategoryController extends Controller
 			return $this->i();
 		}
 		
-		Category::find($id)->delete();
+		$category->delete();
 		
 		return $this->i();
     }

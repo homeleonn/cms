@@ -13,6 +13,10 @@
 
 DB::connection()->enableQueryLog();
 
+Route::get('/', function(Request $request){
+	return view('welcome');
+})->name('index');
+
 Route::group(['prefix' => 'admin', 'namespace' => 'Admin'], function(){
 	Route::resource('categories', 'CategoryController');
 });
