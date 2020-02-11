@@ -11,14 +11,14 @@
 	<table border="1">
 		<tr>
 			<td>ID</td>
-			<td>Name</td>
+			<td>Title</td>
 			<td>Created_at</td>
 			<td>Updated_at</td>
 		</tr>
 		@foreach ($categories as $category)
 		<tr>
 			<td><a href="{{ route('categories.edit', $category->id) }}">{{ $category->id }}</a></td>
-			<td>{{ $category->name }}</td>
+			<td>{{ $category->title }}</td>
 			<td>{{ $category->created_at }}</td>
 			<td>{{ $category->updated_at }}</td>
 			<td>

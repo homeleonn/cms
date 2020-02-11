@@ -63,3 +63,18 @@ $response = $kernel->handle(
 $response->send();
 
 $kernel->terminate($request, $response);
+
+if ($t = DB::getQueryLog()) 
+	dd($t);
+	// dd(array_map(function($tt){
+		// if (isset($tt[0])) {
+			// foreach ($tt as $key => $t) {
+				// dump($t);
+				// $tt[$key]['time'] = (float)$t['time'] / 1000;
+			// }
+		// } else {
+			// $tt['time'] = (float)$tt['time'] / 1000;
+		// }
+		// return $tt;
+		
+	// }, $t));
