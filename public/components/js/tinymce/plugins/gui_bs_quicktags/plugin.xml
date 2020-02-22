@@ -1,0 +1,17 @@
+<?xml version="1.0"?> 
+<widget xmlns="http://www.w3.org/ns/widgets">
+	<name>GUI - Bootstrap Quicktags</name>
+	<version>1.0</version>
+	<author>Jasman</author>
+	<authorURL>http://ihsana.com/jasman.z</authorURL>
+	<description>Galau UI - Bootstrap Quicktags is a TinyMCE plugin that allow create and edit container, row, column, well, jumbotron and shortcut that use bootstrap framework</description>
+	<tags>plugin, tinymce, container, row, column, well, jumbotron, bootstrap</tags>
+	<preferences>
+		<preference name="id" value="gui_bs_quicktags"></preference>
+		<preference name="framework" value="bootstrap"></preference>
+		<preference name="path" value="add-ons/gui_bs_quicktags/plugin.min.js"></preference>
+		<preference name="button" value="gui_bs_quicktags gui_bs_container gui_bs_row gui_bs_column gui_bs_well gui_bs_jumbotron"></preference>
+        <preference name="menu" value="gui_bs_quicktags"></preference>
+        <preference name="gui_bs_quicktags" value="{toolbar_text:true,css:{exist:true,external:gui_bootstrap_url}}"></preference>
+	</preferences>
+</widget>

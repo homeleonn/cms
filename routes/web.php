@@ -13,6 +13,8 @@
 
 DB::connection()->enableQueryLog();
 
+require dirname(__DIR__) . '/app/functions/functions.php';
+// dd(dirname(__DIR__));
 Route::get('/', function(Request $request){
 	return view('welcome');
 })->name('index');

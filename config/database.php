@@ -50,11 +50,14 @@ return [
             'charset' => 'utf8',
             'collation' => 'utf8_general_ci',
             'prefix' => '',
-            'strict' => true,
+            'strict' => false,
             'engine' => null,
 			'options'  => [
 				PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
 			],
+			// 'modes' => [
+				// 'ONLY_FULL_GROUP_BY',
+			// ],
         ],
 
         'pgsql' => [

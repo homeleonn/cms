@@ -44,35 +44,20 @@ class PostController extends Controller
 	 */
 	public function store(Request $request)
 	{
-		$messages = [
-		    'data.ip.unique' => 'Given url and post type are not unique',
-		];
-
-		// dd($request->input('slug'));
-
-
-		$request->request->add(['slug.post_type' => $request->input('slug') . '.page']);
 		dump($request->all());
-		$slug = $request->input('slug');
-		$post_type = 'page';
-		dd(\DB::select('Select count(*) as count from posts where slug = ? and post_type = ?', [$slug, '1'])[0]->count);
-		// Validator::make($request->all(), 
-		// 	[
-		// 		'name' => 'unique:games,name,NULL,id,user_id,'.$user->id
-		// 		'slug' => 'unique:posts,slug,NULL,post_type,post_type,'.$user->id
-		// 	    'slug.post_type' => [
-		// 	        'required',
-		// 	        Rule::unique('posts')->where(function ($query) use ($slug, $post_type) {
-		// 	            return $query->where('slug', $slug)
-		// 	            ->where('post_type', $post_type);
-		// 	        }),
-		// 	    ],
-		// 	],
-		// 	$messages
-		// );
-		// Post::create($request->all());
+		// $post_type = 'page';
+		
+		$request->validate([
+			'title' => 'required'
+		]);
+		$request->request->add(['post_type' => 'test']);
+		// dd($request->input('slug'));
+		// dd(\DB::select('Select count(*) as count from posts where slug = ? and post_type = ?', [$slug, '1'])[0]->count);
 
-		// return $this->i();
+
+		Post::create($request->all());
+
+		return $this->i();
 	}
 
 	/**
