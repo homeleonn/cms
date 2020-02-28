@@ -64,8 +64,8 @@ $response->send();
 
 $kernel->terminate($request, $response);
 
-if ($t = DB::getQueryLog()) 
-	dump($t);
+// if ($t = DB::getQueryLog()) 
+	// dump($t);
 	// dd(array_map(function($tt){
 		// if (isset($tt[0])) {
 			// foreach ($tt as $key => $t) {

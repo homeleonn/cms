@@ -2,9 +2,12 @@
 
 use App\Helpers\PostsTypes;
 use App\Helpers\Arr;
+use App\Helpers\Config;
+
 
 addPageType('test', [
 		'title' => 'Test',
+		'description' => 'Test Description',
 		'hierarchical' => false,
 		'has_archive'  => 'tests',
 		'rewrite' => ['slug' => 'tests', 'with_front' => false, 'paged' => 20],
@@ -21,6 +24,7 @@ addPageType('test', [
 
 addPageType('program', [
 		'title' => 'Программы',
+		'description' => 'Programs Description',
 		'hierarchical' => false,
 		'has_archive'  => 'programs',
 		'rewrite' => ['slug' => 'programs', 'with_front' => false, 'paged' => 20],
@@ -46,6 +50,8 @@ function addPageType(string $type, array $options){
 	PostsTypes::set($type, $options);
 	$sep = '/';
 	$paged = $options['rewrite']['paged'] ? "{$sep}page/{page}" : '';
+	
+	Route::get($options['has_archive'] . '/{slug}', ['uses' => 'PostController@actionSingle', 'type' => $type, 'args' => ['slug']]);
 	
 	if ($options['has_archive']) {
 		Route::get($options['has_archive'] . $paged, ['uses' => 'PostController@actionList', 'type' => $type, 'args' => ['page']]);
@@ -109,7 +115,7 @@ function apply(){
 		}
 	}
 	
-	return isset($args[0]) ? $args[0] : false;
+	return $args[0] ?? false;
 }
 
 function doAction(){
@@ -118,6 +124,21 @@ function doAction(){
 function applyFilter(){
 	return call_user_func_array('apply', array_merge(['filters'], func_get_args()));
 }
+
+function postImgSrc($post, $thumbnail = 'orig'){
+	$validKeys = ['thumbnail', 'medium'];
+	
+	if(in_array($thumbnail, $validKeys) && isset($post->_jmp_post_img_meta['sizes'][$thumbnail])){
+		return public_path() . 'uploads/' . substr($post->_jmp_post_img, 0, strrpos($post->_jmp_post_img, '/') + 1) . $post->_jmp_post_img_meta['sizes'][$thumbnail]['file'];
+	}
+	
+	return isset($post->_jmp_post_img) ? public_path() . 'uploads/' . $post->_jmp_post_img : theme_path() . 'img/logo_trnsprnt1.jpg';
+}
+
+function theme_path(){
+	return URL::to('/') . '/themes/' . Config::get('theme') . '/';
+}
+
 
 
 addFilter('postTypeLink', 'myPostTypeLink');

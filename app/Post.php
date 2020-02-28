@@ -29,12 +29,13 @@ class Post extends Model
 	
 	private function getAll($query, $params, $array = false, $count = null)
 	{//dd(func_get_args());
-		// if($array) $params = [$params];
+		if (!is_array($params) || $array) $params = [$params];
 		// dd(DB::select('Select * from posts limit 1'));
 		// $this->checkInLimit($query, $params, $count);
 		// $data = call_user_func_array(['DB', 'Select'], array_merge([$query . $this->limit], $params));
-		// dd(array_merge([$query], $params));
-		return call_user_func_array(['DB', 'Select'], array_merge([$query], $params));
+		// dd(array_merge([$query], [$params]));
+		// dd([$query], $query, $params);
+		return forward_static_call_array (['DB', 'Select'], array_merge([$query], [$params]));
 	}
 	
 	

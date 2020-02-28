@@ -2,12 +2,13 @@
 
 namespace App\Helpers;
 
-use App\Traits\{Container, Singletone};
+use App\Traits\Singletone;
 
 class PostsTypes
 {
-	use Container, Singletone;
+	use Singletone;
 	
+	private static $container = [];
 	private static $currentType;
 	
 	public static function setCurrentType(string $type): void
@@ -15,11 +16,22 @@ class PostsTypes
 		self::$currentType = $type;
 	}
 	
-	public static function get($option, $type = null)
+	public static function set($key, $value)
+	{
+		$value['type'] = $key;
+		self::$container[$key] = $value;
+	}
+	
+	public static function has($key)
+	{
+		return isset(self::$container[$key]);
+	}
+	
+	public static function get($option = false, $type = null)
 	{
 		if ($type) {
 			if (self::has($type)) {
-				return self::$container[$type][$option];
+				return $option ? self::$container[$type][$option] : self::$container[$type];
 			}
 		} else {
 			return self::$container[self::$currentType][$option] ?? NULL;
@@ -41,4 +53,5 @@ class PostsTypes
 		return self::getCurrent()['has_archive'];
 		return $options['has_archive'] . ($options['has_archive'] ? '/' : '');
 	}
+	
 }

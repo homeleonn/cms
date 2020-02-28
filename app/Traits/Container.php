@@ -8,7 +8,11 @@ trait Container
 	
 	public static function get($key)
 	{
-		return self::has($key) ? self::$container[$key] : NULL;
+		if (!self::has($key)) {
+			throw new Exception("Element '{$name}' not found");
+		}
+		
+		return self::$container[$key];
 	}
 	
 	public static function set($key, $value)
@@ -19,5 +23,10 @@ trait Container
 	public static function has($key)
 	{
 		return isset(self::$container[$key]);
+	}
+	
+	public static function getAll()
+	{
+		return self::$container;
 	}
 }
