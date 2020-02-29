@@ -67,7 +67,12 @@ class Taxonomy
 	
 	public function getAllByObjectsIds($objectsIds)
 	{
-		return DB::select('Select t.*, tt.*, tr.object_id from terms as t, term_taxonomy as tt, term_relationships as tr where t.id = tt.term_id and tt.term_taxonomy_id = tr.term_taxonomy_id and tr.object_id IN('.Arr::getCountItemsLikeQuestionsMark($objectsIds).')', $objectsIds);
+		return DB::table('terms as t')
+					->join('term_taxonomy as tt', 		't.id', '=', 'tt.term_id')
+					->join('term_relationships as tr', 	'tt.term_taxonomy_id', '=', 'tr.term_taxonomy_id')
+					->select('t.*', 'tt.*', 'tr.object_id')
+					->whereIn('tr.object_id', $objectsIds)
+					->get()->toArray();
 	}
 	
 	public function getByTaxonomies($taxonomies = NULL)

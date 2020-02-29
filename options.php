@@ -2,7 +2,7 @@
 
 return [
 	'theme' => 'funkids',
-	'front_page' => '79',
+	'front_page' => '1',
 	'menu_active_id' => '3',
 	'menu' => 'a:2:{i:0;a:2:{s:2:"id";i:2;s:4:"name";s:4:"test";}i:1;a:2:{s:2:"id";i:3;s:4:"name";s:7:"funkids";}}',
 	'main_page_data' => '68',

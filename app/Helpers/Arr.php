@@ -5,12 +5,12 @@ namespace App\Helpers;
 class Arr{
 	public static function itemsOnKeys($items, $keys)
 	{//dd($items, $keys);
-		if(!is_array($items)){
-			throw new \Exception('Argument $items not array');
-		}
-		if(!is_array($keys)){
-			throw new \Exception('Argument $keys not array');
-		}
+		// if(!is_array($items)){
+			// throw new \Exception('Argument $items not array');
+		// }
+		// if(!is_array($keys)){
+			// throw new \Exception('Argument $keys not array');
+		// }
 		$itemsOnKey = [];
 		foreach($items as $item){
 			$iitem = [];

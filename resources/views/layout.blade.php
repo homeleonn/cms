@@ -5,11 +5,11 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<?php //jmpHead() ?>
 	<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&subset=latin,cyrillic" rel="stylesheet" type="text/css">
-	<link rel="stylesheet" href="<?=theme_path()?>css/bootstrap.min.css">
-	<link rel="stylesheet" href="<?=theme_path()?>css/fontello.css">
-	<link rel="stylesheet" href="<?=theme_path()?>css/style.css">
-	<link rel="shortcut icon" href="<?=\URL::to('/')?>/favicon.ico" type="image/x-icon">
-	<script>let root = "<?=\URL::to('/')?>", theme = "<?=theme_path()?>";function $$(callback){window.addEventListener('load', callback);}</script>
+	<link rel="stylesheet" href="<?=theme_url()?>css/bootstrap.min.css">
+	<link rel="stylesheet" href="<?=theme_url()?>css/fontello.css">
+	<link rel="stylesheet" href="<?=theme_url()?>css/style.css">
+	<link rel="shortcut icon" href="<?=\url('/')?>/favicon.ico" type="image/x-icon">
+	<script>let root = "<?=\url('/')?>", theme = "<?=theme_url()?>";function $$(callback){window.addEventListener('load', callback);}</script>
 </head>
 <body>
 	<div class="wrapper<?//=(isset($post) ? doAction('wrapper_classes', $post) : '');?>" id="wrapper">
@@ -41,7 +41,7 @@
 					</div>
 					<div class="row">
 						<div class="logo-text">
-							<a href="<?=\URL::to('/')?>"><img alt="Логотип. Организация детских праздников Одесса. Аниматоры. Шоу программы. Низкие цены" src="<?=theme_path()?>img/logo_trnsprnt1.png"></a>
+							<a href="<?=\url('/')?>"><img alt="Логотип. Организация детских праздников Одесса. Аниматоры. Шоу программы. Низкие цены" src="<?=theme_url()?>img/logo_trnsprnt1.png"></a>
 						</div>
 						<div class="tels fs25">
 							<a href="tel:+380677979385">(067) 797-93-85</a>
@@ -49,6 +49,26 @@
 							<div class="phone-top"><span class="icon-phone"></span><span>Заказать обратный звонок</span></div>
 						</div>
 					</div>
+					<nav class="menu">
+						<label for="mobile-nav"><div></div></label>
+						<input type="checkbox" id="mobile-nav">
+						<ul class="menu"><li><a href="/">Главная</a></li>
+								<li class="top-menu">
+								<a href="/price/">Цены</a>			</li>		<li class="top-menu">
+								<a href="/reviews/">Отзывы</a>			</li>		<li class="top-menu">
+								<a href="/blog/">Блог</a>			</li>		<li class="top-menu">
+								<a href="/programs">programs</a>			</li>
+								<li class="top-menu">
+								<a href="/contacts">Контакты</a>			</li>
+							<li class="top-menu hidd extra-contacts">
+								<div>
+									<a href="tel:+380677979385">+38 (067) 797-93-85</a>
+									<a href="tel:+380632008595">+38 (063) 200-85-95</a>
+									Почта: <a href="mailto:funkids@mail">funkidssodessa@gmail.com</a>
+								</div>
+							</li>
+						</ul>
+					</nav>		
 					<?php //getMenu(); ?>
 					<?php //if(isMain()) doAction('header_after_menu', 'glavnii');?>
 				</div>
@@ -68,7 +88,7 @@
 					<div class="row top">
 						<div class="col-md-6">
 							<div class="logo-text">
-								<a href="<?=\URL::to('/')?>"><img src="<?=theme_path()?>img/logo_trnsprnt1.png" alt="Логотип в футере сайта"></a>
+								<a href="<?=\url('/')?>"><img src="<?=theme_url()?>img/logo_trnsprnt1.png" alt="Логотип в футере сайта"></a>
 								<div class="inline-title center">Организация детских праздников</div>
 							</div>
 						</div>
@@ -96,6 +116,6 @@
 		<div class="up" title="Подняться вверх"></div>
 	</div>
 	<script type='text/javascript' src='//ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js'></script>
-	<script src="<?=theme_path()?>js/js.js"></script>
+	<script src="<?=theme_url()?>js/js.js"></script>
 </body>
 </html>

@@ -11,15 +11,18 @@
 |
 */
 
+
+
 DB::connection()->enableQueryLog();
 
 require dirname(__DIR__) . '/app/functions/functions.php';
-// dd(dirname(__DIR__));
-Route::get('/', function(Request $request){
-	return view('welcome');
-})->name('index');
+
+
+Route::get('/', 'PostController@actionIndex')->name('index');
 
 Route::group(['prefix' => 'admin', 'namespace' => 'Admin'], function(){
 	Route::resource('categories', 'CategoryController');
 	Route::resource('posts', 'PostController');
 });
+
+Route::get('{slugMulti}', 'PostController@actionSingle')->where('slugMulti', '[а-яА-ЯЁa-zA-Z0-9-\/]+');;

@@ -5,6 +5,8 @@ ini_set('xdebug.var_display_max_children', 256);
 ini_set('xdebug.var_display_max_data', 1024);
 ini_set('date.timezone', 'Europe/Kiev');
 ini_set('xdebug.overload_var_dump', '1');
+const URL_PATTERN 		= '[а-яА-ЯЁa-zA-Z0-9-]+';
+const URL_PATTERN_SLASH = '[а-яА-ЯЁa-zA-Z0-9-\/]+';
 /**
  * Laravel - A PHP Framework For Web Artisans
  *
@@ -64,8 +66,8 @@ $response->send();
 
 $kernel->terminate($request, $response);
 
-// if ($t = DB::getQueryLog()) 
-	// dump($t);
+if ($t = DB::getQueryLog()) 
+	dump($t);
 	// dd(array_map(function($tt){
 		// if (isset($tt[0])) {
 			// foreach ($tt as $key => $t) {

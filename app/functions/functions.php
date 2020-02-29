@@ -4,6 +4,62 @@ use App\Helpers\PostsTypes;
 use App\Helpers\Arr;
 use App\Helpers\Config;
 
+function vd($exit, ...$args){
+	$trace = debug_backtrace()[1];
+	echo '<small style="color: green;"><pre>',$trace['file'],':',$trace['line'],':</pre></small><pre>';
+	call_user_func_array(!$exit ? 'dump' : 'dd', $args[0] ? [$args[0]]: [NULL]);
+}
+
+function d(){
+	vd(NULL, func_get_args());
+}
+
+function ddd(){
+	vd(true, func_get_args());
+	// requestStats();
+	// exit;
+}
+
+addPageType('post', [
+		'type' => 'post',
+		'title' => 'Блог',
+		'title_for_admin' => 'Записи',
+		'description' => 'Блог',
+		'add' => 'Добавить запись',
+		'edit' => 'Редактировать запись',
+		'delete' => 'Удалить запись',
+		'common' => 'записей',
+		'hierarchical' => false,
+		'has_archive'  => 'blog',
+		'taxonomy' => [
+			'category' => [
+				'title' => 'Категория',
+				'add' => 'Добавить категорию',
+				'edit' => 'Редактировать категорию',
+				'delete' => 'Удалить категорию',
+				'hierarchical' => false,
+			],
+		],
+		'rewrite' => ['slug' => 'blog/%category%', 'with_front' => false, 'paged' => 20],
+]);
+
+
+
+addPageType('page', [
+		'type' => 'page',
+		'title' => '',
+		'title_for_admin' => 'Страницы',
+		'description' => 'Страницы',
+		'add' => 'Добавить страницу',
+		'edit' => 'Редактировать страницу',
+		'delete' => 'Удалить страницу',
+		'common' => 'страниц',
+		'hierarchical' => true,
+		'has_archive'  => false,
+		'taxonomy' => [],
+		'rewrite' => ['with_front' => true, 'paged' => false],
+]);
+
 
 addPageType('test', [
 		'title' => 'Test',
@@ -51,7 +107,8 @@ function addPageType(string $type, array $options){
 	$sep = '/';
 	$paged = $options['rewrite']['paged'] ? "{$sep}page/{page}" : '';
 	
-	Route::get($options['has_archive'] . '/{slug}', ['uses' => 'PostController@actionSingle', 'type' => $type, 'args' => ['slug']]);
+	if ($options['has_archive'])
+		Route::get($options['has_archive'] . '/{slug}', ['uses' => 'PostController@actionSingle', 'type' => $type, 'args' => ['slug']]);
 	
 	if ($options['has_archive']) {
 		Route::get($options['has_archive'] . $paged, ['uses' => 'PostController@actionList', 'type' => $type, 'args' => ['page']]);
@@ -65,6 +122,10 @@ function addPageType(string $type, array $options){
 			Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}{$paged}", ['uses' => 'PostController@actionList', 'type' => $type, 'taxonomy' => $t, 'args' => ['tslug', 'page']]);
 		}
 	}
+}
+
+function uploads_url(){
+	return url('/') . '/uploads/';
 }
 
 function add($type, $funcName, $userFunc, $front = false){
@@ -129,14 +190,19 @@ function postImgSrc($post, $thumbnail = 'orig'){
 	$validKeys = ['thumbnail', 'medium'];
 	
 	if(in_array($thumbnail, $validKeys) && isset($post->_jmp_post_img_meta['sizes'][$thumbnail])){
-		return public_path() . 'uploads/' . substr($post->_jmp_post_img, 0, strrpos($post->_jmp_post_img, '/') + 1) . $post->_jmp_post_img_meta['sizes'][$thumbnail]['file'];
+		return uploads_url() . substr($post->_jmp_post_img, 0, strrpos($post->_jmp_post_img, '/') + 1) . $post->_jmp_post_img_meta['sizes'][$thumbnail]['file'];
 	}
 	
-	return isset($post->_jmp_post_img) ? public_path() . 'uploads/' . $post->_jmp_post_img : theme_path() . 'img/logo_trnsprnt1.jpg';
+	return isset($post->_jmp_post_img) ? uploads_url() . $post->_jmp_post_img : theme_url() . 'img/logo_trnsprnt1.jpg';
 }
 
-function theme_path(){
-	return URL::to('/') . '/themes/' . Config::get('theme') . '/';
+
+function theme_url(){
+	return url('/') . '/themes/' . Config::get('theme') . '/';
+}
+
+function urlWithoutParams(){
+	return url('/') . explode('?', $_SERVER['REQUEST_URI'])[0];
 }
 
 

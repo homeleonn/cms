@@ -19,6 +19,9 @@
 	#RewriteCond %{REQUEST_URI} !/$
 	#RewriteCond %{REQUEST_URI} !\.(html|ico|gif|jpg|jpeg|png|js|css)$
 	#RewriteRule ^(.*) %{REQUEST_URI}/ [L,R=301]
+	
+	RewriteCond %{THE_REQUEST} ^.*/index\.php
+	RewriteRule ^index.php(.*)$ /$1 [R=301,L]
 
     # Handle Front Controller...
     RewriteCond %{REQUEST_FILENAME} !-d

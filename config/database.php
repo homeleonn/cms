@@ -52,8 +52,11 @@ return [
             'prefix' => '',
             'strict' => false,
             'engine' => null,
+			// 'fetch'  => PDO::FETCH_ASSOC,
 			'options'  => [
-				PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+				// PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+				// 'fetch'  => PDO::FETCH_ASSOC,
+				
 			],
 			// 'modes' => [
 				// 'ONLY_FULL_GROUP_BY',

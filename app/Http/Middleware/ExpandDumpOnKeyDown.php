@@ -24,7 +24,7 @@ class ExpandDumpOnKeyDown
 			
 			$$(() => {
 				let a = $$$();
-				a();
+				// a();
 				document.addEventListener('keydown', function(event) {
 					if (event.code == 'KeyX' && (event.altKey)) {
 						a();
