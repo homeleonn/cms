@@ -102,24 +102,105 @@ addPageType('program', [
 		]
 ]);
 
+// function addPageType(string $type, array $options){
+	// PostsTypes::set($type, $options);
+	// $sep = '/';
+	// $paged = $options['rewrite']['paged'] ? "{$sep}page/{page}" : '';
+	
+	// if ($options['has_archive'])
+		// Route::get($options['has_archive'] . '/{slug}', ['uses' => 'PostController@actionSingle', 'type' => $type, 'args' => ['slug']]);
+	
+	// if ($options['has_archive']) {
+		// Route::get($options['has_archive'] . $paged, ['uses' => 'PostController@actionList', 'type' => $type, 'args' => ['page']]);
+		// Route::get($options['has_archive'], ['uses' => 'PostController@actionList', 'type' => $type]);
+	// }
+	
+	// if (!empty($options['taxonomy'])) {
+		// if ($options['has_archive'] === false) $sep = '';
+		// foreach ($options['taxonomy'] as $t => $values) {
+			// Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}", ['uses' => 'PostController@actionList', 'type' => $type, 'taxonomy' => $t, 'args' => ['tslug']]);
+			// Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}{$paged}", ['uses' => 'PostController@actionList', 'type' => $type, 'taxonomy' => $t, 'args' => ['tslug', 'page']]);
+		// }
+	// }
+// }
+
+// function addPageType(string $type, array $options){
+	// PostsTypes::set($type, $options);
+	// $sep = '/';
+	// $paged = $options['rewrite']['paged'] ? "{$sep}page/{page}" : '';
+	
+	// if ($options['has_archive'])
+		// Route::get($options['has_archive'] . '/{slug}', ['uses' => 'PostController@actionSingle', 'type' => $type, 'args' => ['slug']]);
+	
+	// if ($options['has_archive']) {
+		// Route::get($options['has_archive'] . $paged, ['uses' => 'PostController@actionList', 'type' => $type, 'args' => ['page']]);
+		// Route::get($options['has_archive'], ['uses' => 'PostController@actionList', 'type' => $type]);
+	// }
+	
+	// if (!empty($options['taxonomy'])) {
+		// if ($options['has_archive'] === false) $sep = '';
+		// foreach ($options['taxonomy'] as $t => $values) {
+			// Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}", ['uses' => 'PostController@actionList', 'type' => $type, 'taxonomy' => $t, 'args' => ['tslug']]);
+			// Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}{$paged}", ['uses' => 'PostController@actionList', 'type' => $type, 'taxonomy' => $t, 'args' => ['tslug', 'page']]);
+		// }
+	// }
+// }
+
+// function addPageType(string $type, array $options){
+	// PostsTypes::set($type, $options);
+	// $sep = '/';
+	// $paged = $options['rewrite']['paged'] ? "{$sep}page/{page}" : '';
+	
+	// if ($options['has_archive']) {
+		// Route::get($options['has_archive'] . '/{slug}', ['uses' => 'PostController@actionSingle__' . $type]);
+	// }
+	
+	// if ($options['has_archive']) {
+		// Route::get($options['has_archive'] . $paged, ['uses' => 'PostController@actionList__' . $type]);
+		// Route::get($options['has_archive'], ['uses' => 'PostController@actionList__' . $type]);
+	// }
+	
+	// if (!empty($options['taxonomy'])) {
+		// if ($options['has_archive'] === false) $sep = '';
+		// foreach ($options['taxonomy'] as $t => $values) {
+			// Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}", ['uses' => "PostController@actionList__{$type}00{$t}"]);
+			// Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}{$paged}", ['uses' => "PostController@actionList__{$type}00{$t}"]);
+		// }
+	// }
+// }
+
+
+
 function addPageType(string $type, array $options){
 	PostsTypes::set($type, $options);
+	$pc = 'App\Http\Controllers\PostController';
 	$sep = '/';
 	$paged = $options['rewrite']['paged'] ? "{$sep}page/{page}" : '';
 	
-	if ($options['has_archive'])
-		Route::get($options['has_archive'] . '/{slug}', ['uses' => 'PostController@actionSingle', 'type' => $type, 'args' => ['slug']]);
+	if ($options['has_archive']) {
+		Route::get($options['has_archive'] . '/{slug}', function($slug) use ($type, $pc, $sep, $paged){
+			return App::make($pc)->run($type, 'actionSingle', [$slug]);
+		});
+	}
 	
 	if ($options['has_archive']) {
-		Route::get($options['has_archive'] . $paged, ['uses' => 'PostController@actionList', 'type' => $type, 'args' => ['page']]);
-		Route::get($options['has_archive'], ['uses' => 'PostController@actionList', 'type' => $type]);
+		Route::get($options['has_archive'] . $paged, function($page) use ($type, $pc, $sep, $paged){
+			return App::make($pc)->run($type, 'actionList', [$page]);
+		});
+		Route::get($options['has_archive'], function() use ($type, $pc, $sep, $paged){
+			return App::make($pc)->run($type, 'actionList', [1]);
+		});
 	}
 	
 	if (!empty($options['taxonomy'])) {
 		if ($options['has_archive'] === false) $sep = '';
 		foreach ($options['taxonomy'] as $t => $values) {
-			Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}", ['uses' => 'PostController@actionList', 'type' => $type, 'taxonomy' => $t, 'args' => ['tslug']]);
-			Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}{$paged}", ['uses' => 'PostController@actionList', 'type' => $type, 'taxonomy' => $t, 'args' => ['tslug', 'page']]);
+			Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}", function($tslug) use ($type, $pc, $sep, $paged){
+				return App::make($pc)->run($type, 'actionList', [1, $tslug, $t]);
+			});
+			Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}{$paged}", function($tslug, $page) use ($type, $pc, $sep, $paged){
+				return App::make($pc)->run($type, 'actionList', [$page, $tslug, $t]);
+			});
 		}
 	}
 }

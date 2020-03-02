@@ -15,13 +15,6 @@ class Post extends Model
 	private $allItemsCount;
 	private $start = 1;
 	
-	
-	
-	public function __construct()
-	{
-		
-	}
-	
 	public function single($slug, $id = NULL)
 	{
 		return $id  ? self::find($id) 

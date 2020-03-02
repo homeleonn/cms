@@ -25,4 +25,17 @@ Route::group(['prefix' => 'admin', 'namespace' => 'Admin'], function(){
 	Route::resource('posts', 'PostController');
 });
 
-Route::get('{slugMulti}', 'PostController@actionSingle')->where('slugMulti', '[а-яА-ЯЁa-zA-Z0-9-\/]+');;
+// Route::get('foo', function(){
+    // return App::make('App\Http\Controllers\PostController')->foo(1, 2);
+// });
+
+Route::get('{slugMulti}', ['uses' => 'PostController@actionSingle', 'foo' => 'bar'])->where('slugMulti', '[а-яА-ЯЁa-zA-Z0-9-\/]+');
+
+
+// Route::get('foo', function(){
+    // return App::make('App\Http\Controllers\PostController')->foo(1, 2);
+// });
+
+// Route::get('{slugMulti}', function($slug){
+	// return App::make('App\Http\Controllers\PostController')->run('page', 'actionSingle', [$slug]);
+// })->where('slugMulti', '[а-яА-ЯЁa-zA-Z0-9-\/]+');

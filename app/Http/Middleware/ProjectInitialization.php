@@ -17,6 +17,7 @@ class ProjectInitialization
     public function handle($request, Closure $next)
     {
 		Config::optionsLoad();
+		require public_path() . '/themes/' . Config::get('theme') . '/functions.php';
         return $next($request);
     }
 }

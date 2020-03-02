@@ -12,18 +12,26 @@ class PostController extends Controller
 {
 	private $img = '_jmp_post_img';
 	
-	private function run($type)
+	public function run($type, $method = null, $args = null)
+	// public function run($type)
 	{
+		dd(app()->get('request')->route()->getAction());
 		$this->model = new Post;
 		$this->model->taxonomy = new Taxonomy();
 		PostsTypes::setCurrentType($type);
 		$this->postOptions = $this->post = PostsTypes::getCurrent();
 		$this->breadcrumbs = [];
+		
+		if ($method) {
+			array_unshift($args, app()->get('request'));
+			return $this->$method(...$args);
+		}
 	}
 	
     public function actionIndex(Request $request)
 	{
 		// dd(__METHOD__);
+		// funKids_all();
         extract($this->prepareArgs($request->route()->getAction(), func_get_args()) ?? []);
 		$frontPage = Config::get('front_page');
 		if (is_numeric($frontPage)) {
@@ -35,8 +43,10 @@ class PostController extends Controller
 	
 	public function actionSingle(Request $request, $slug, $id = null)
 	{
-		extract($this->prepareArgs($request->route()->getAction(), func_get_args()) ?? []);
+		$this->run('page');
+		// extract($this->prepareArgs($request->route()->getAction(), func_get_args()) ?? []);
 		// dd(__METHOD__, get_defined_vars());
+		// dd($this);
 		if ($id) {
 			if (!$post = Post::find($id)) {
 				abort(404);
@@ -63,7 +73,7 @@ class PostController extends Controller
 		}
 		
 		// If type of this post related taxonomy
-		if (!$this->postOptions['hierarchical']) {
+		if (!$post->postOptions['hierarchical']) {
 			$post = $this->taxonomyPost($post);
 		} else { // If type of this post is hierarchical structure, check hierarchy
 			if (!empty($hierarchy)) {
@@ -218,10 +228,12 @@ class PostController extends Controller
 		return $post;
 	}
 	
-	public function actionList(Request $request)
+	// public function actionList(Request $request)
+	public function actionList(Request $request, $page = 1, $tslug = null, $taxonomy = null, $limit = null)
 	{
 		// dd(1);
-		extract($this->prepareArgs($request->route()->getAction(), func_get_args()) ?? []); // get type / tslug / page / taxonomy
+		// dd(func_get_args());
+		// extract($this->prepareArgs($request->route()->getAction(), func_get_args()) ?? []); // get type / tslug / page / taxonomy
 		$this->post = $this->postOptions;
 		$hierarchy = explode('/', $tslug);
 		
@@ -393,10 +405,12 @@ class PostController extends Controller
 	
 	private function prepareArgs($action, $comeArgs)
 	{
-		$resArgs['type'] 		= $action['type'] ?? 'page';
-		$resArgs['taxonomy'] 	= $action['taxonomy'] ?? null;
-		$resArgs['tslug'] 		= null;
-		$resArgs['page'] 		= $resArgs['page'] ?? 1;
+		$resArgs = [
+			'type' 		=> $action['type'] ?? 'page',
+			'taxonomy' 	=> $action['taxonomy'] ?? null,
+			'tslug' 	=> null,
+			'page' 		=> $resArgs['page'] ?? 1,
+		];
 		
 		
 		if (isset($action['args']) && is_array($action['args'])) {
@@ -478,6 +492,29 @@ class PostController extends Controller
 		//dd(func_get_args());
 		$this->breadcrumbs[$taxonomyTitle] = $text . ': ' . $value;
 		$postTitle = $taxonomyTitle . ': ' . $value . ' | ' . $postTitle;
+	}
+	
+	public function __call($method, $args)
+	{
+		dd(func_get_args());
+		[$method, $args] = explode('__', $method);
+		$args = explode('00', $args);
+		$postType = array_shift($args);
+		$this->run($postType);
+		
+		// if ($method == 'actionSingle') {
+			
+		// } elseif ($method == 'actionList') {
+			
+		// }
+		array_unshift($args, app()->get('request'));
+		
+		$this->$method(...$args);
+	}
+	
+	public function foo()
+	{
+		dd(__METHOD__, func_get_args());
 	}
 }
 
