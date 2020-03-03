@@ -1,0 +1,97 @@
+#plug-my-slider > #sliders-list .item{
+	margin: 10px 10px;
+}
+
+#plug-my-slider > #sliders-list .item a{
+	padding: 7px;
+	border: 1px black solid;
+	border-radius: 4px;
+	background: #eee;
+	font-weight: bold;
+	min-width: 100px;
+	display: inline-block;
+}
+
+#plug-my-slider > #sliders-list .item a.active{
+	background: lightgreen;
+}
+
+#sliderphotosContainer{
+	display: flex;
+}
+
+#sliderphotosContainer{
+	display: flex;
+	flex-wrap: wrap;
+
+}
+
+#sliderphotosContainer img{
+	max-height: 300px;
+	object-fit: cover;
+	padding: 10px 0;
+}
+
+#sliderphotosContainer div{
+	text-align: center;
+	~border: 1px lightgreen solid;
+	margin: 5px 0;
+}
+
+
+#sliderphotosContainer div > .del,
+#sliderphotosContainer div > .text{
+	position: absolute;
+	font-size: 25px;
+	width: 40px;
+	height: 40px;
+	color: red;
+	right: 25px;
+	top: 10px;
+	padding: 0 5px;
+	background: #e5e5e5;
+	cursor: pointer;
+	border-radius: 5px;
+	display: none;
+}
+
+#sliderphotosContainer div > .text{
+	color: #000;
+	right: 80px;
+}
+
+
+#sliderphotosContainer div:hover > .del,
+#sliderphotosContainer div:hover > .text{
+	display: block;
+}
+
+.sorted-save{
+	padding: 5px;
+	margin: 10px 20px;
+	background: #e5e5e5;
+	display: inline-block;
+	border-radius: 5px;
+	border: 3px lightgreen solid;
+	cursor: pointer;
+	display: none;
+}
+
+.sorted-save.active{
+	border: 3px red solid;
+}
+
+#edit-text{
+	width: 50%;
+	position: fixed;
+	top: 50px;
+	background: rgb(243, 243, 243);
+	border: 3ps lightgreen solid;
+	padding: 10px;
+	left: 50%;
+	margin-left: -25%;
+}
+
+#edit-text > input{
+	width: 100%;
+}

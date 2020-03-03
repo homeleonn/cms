@@ -77,7 +77,7 @@ class Taxonomy
 	
 	public function getByTaxonomies($taxonomies = NULL)
 	{
-		$taxonomies = $taxonomies ?: array_keys(PostsTypes::get('taxonomy'));
+		$taxonomies = $taxonomies ?: (PostsTypes::get('taxonomy') ? array_keys(PostsTypes::get('taxonomy')) : null);
 		if (empty($taxonomies)) return [];
 		if (($cache = self::cache($taxonomies)) === NULL) {
 			self::cache($taxonomies, DB::select('Select t.*, tt.* from terms as t, term_taxonomy as tt where t.id = tt.term_id and tt.taxonomy IN('.Arr::getCountItemsLikeQuestionsMark($taxonomies).')', $taxonomies));

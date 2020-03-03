@@ -9,7 +9,7 @@ trait Container
 	public static function get($key)
 	{
 		if (!self::has($key)) {
-			throw new Exception("Element '{$name}' not found");
+			throw new \Exception("Element '{$key}' not found");
 		}
 		
 		return self::$container[$key];

@@ -1,0 +1,149 @@
+
+.newslider:before{
+	bottom: auto;
+}
+
+
+.slider-new{
+	~border: 2px black solid;
+	overflow: hidden;
+	background: linear-gradient(to bottom, #0f2e93, #fff);
+	~height: 60%;
+	position:relative;
+}
+.slider-new #s{
+	cursor: grab;
+	width: 9999px;
+}
+
+.slider-new #s:active{
+	cursor: grabbing;
+}
+
+.slider-new .item{
+	display: inline-block;
+	~border: 1px red dashed;
+	~width: 80%;
+	~background: #fff;
+	text-align: center;
+}
+
+.slider-new .item img{
+	~width: 100%;
+	transform: scale(.85);
+	transition: .5s;
+	border-radius: 30px;
+	border: 5px transparent solid;
+}
+
+.slider-new .item.active img{
+	transform: scale(1);
+	border: 5px #a7dcdc solid;
+	box-shadow: 0 0 100px #ffffff;
+}
+
+ 
+.slider-new .item, 
+.slider-new #s1{
+	position: relative;
+}
+
+.slider-new #s1{
+	/* transition: .8s; */
+	/* ~transition-timing-function: ease-out; */
+	padding: 100px 50px 20px;
+	transform: translateX(0px);
+	
+}
+
+.slider-new.mdown #s1{
+	transition: none;
+}
+
+.slider-new #s,
+.slider-new #s1,
+.slider-new .item,
+.slider-new .item img{
+	~max-height:98%;
+}
+
+.slider-new .controls{
+	text-align: left;
+	opacity: 1;
+}
+
+.slider-new .controls > .prev,
+.slider-new .controls > .next
+{
+	height: 40px;
+	width: 40px;
+	color: coral;
+	position: absolute;
+	top: 50%;
+	margin-top: -25px;
+	background-color: rgba(255, 255, 255, .8);
+	border-radius: 50%;
+	padding: 6px 8px;
+	font-size: 20px;
+	cursor: pointer;
+}
+
+.slider-new .controls > .prev{
+	left: 2%;
+}
+
+.slider-new .controls > .next{
+	left: 98%;
+	margin-left: -40px;
+	padding-left: 13px !important;
+}
+
+.controls-indicators{
+	text-align: center;
+}
+
+.controls-indicators .citem{
+	border: 2px #07bcc3 solid;
+	border-radius: 50%;
+	width: 25px;
+	height: 25px;
+	padding: 3px;
+	display: inline-block;
+	margin: 0 10px;
+	cursor: pointer;
+}
+
+.controls-indicators .citem.active:after,
+.controls-indicators .citem:hover:after{
+	content: ' ';
+	width: 15px;
+	height: 15px;
+	border-radius: 50%;
+	background: #8d2598;
+	display: block;
+}
+
+.controls-indicators .citem:hover:after{
+	opacity: .4;
+}
+
+.controls-indicators .citem.active:after{
+	opacity: 1;
+}
+
+@media (max-width: 500px){
+	.slider-new #s1{
+		padding: 5px;
+	}
+	
+	.slider-new .item img{
+		border-radius: 10px;
+		border: 2px transparent solid;
+	}
+
+	.slider-new .item.active img{
+		border: 2px #a7dcdc solid;
+		box-shadow: 0 0 50px #ffffff;
+	}
+	
+}

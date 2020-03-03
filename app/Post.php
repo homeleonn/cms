@@ -5,7 +5,7 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 
 use DB;
-use App\Helpers\Arr;
+use App\Helpers\{Arr, Config};
 
 class Post extends Model
 {
@@ -126,5 +126,10 @@ class Post extends Model
 				$count += $c->count;
 		}
 		return $this->getAll($query, [$termsTaxonomyIds], true, $count);
+	}
+	
+	public function getTheme()
+	{
+		return Config::get('theme');
 	}
 }

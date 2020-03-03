@@ -23,6 +23,7 @@ function ddd(){
 addPageType('post', [
 		'type' => 'post',
 		'title' => 'Блог',
+		'h1' => 'Блог',
 		'title_for_admin' => 'Записи',
 		'description' => 'Блог',
 		'add' => 'Добавить запись',
@@ -57,13 +58,14 @@ addPageType('page', [
 		'hierarchical' => true,
 		'has_archive'  => false,
 		'taxonomy' => [],
-		'rewrite' => ['with_front' => true, 'paged' => false],
+		'rewrite' => ['slug' =>'', 'with_front' => true, 'paged' => false],
 ]);
 
 
 addPageType('test', [
 		'title' => 'Test',
 		'description' => 'Test Description',
+		'h1' => 'Test',
 		'hierarchical' => false,
 		'has_archive'  => 'tests',
 		'rewrite' => ['slug' => 'tests', 'with_front' => false, 'paged' => 20],
@@ -81,6 +83,7 @@ addPageType('test', [
 addPageType('program', [
 		'title' => 'Программы',
 		'description' => 'Programs Description',
+		'h1' => 'Программы',
 		'hierarchical' => false,
 		'has_archive'  => 'programs',
 		'rewrite' => ['slug' => 'programs', 'with_front' => false, 'paged' => 20],
@@ -101,6 +104,57 @@ addPageType('program', [
 			],
 		]
 ]);
+
+addPageType('service', [
+		'type' => 'service',
+		'title' => 'Доп. услуги',
+		'_seo_title' => 'Дополнительные услуги | Funkids',
+		'h1' => 'Дополнительные услуги',
+		'title_for_admin' => 'Доп. услуги',
+		'description' => 'Дополнительные услуги на детский праздник, мыльные пузыри, сладкая вата, всё что бы разнообразить праздничный день, запоминающиеся мгновения жизни ребенка | FunKids',
+		'add' => 'Добавить услугу',
+		'edit' => 'Редактировать услугу',
+		'delete' => 'Удалить услугу',
+		'common' => 'услуг',
+		'hierarchical' => false,
+		'has_archive'  => 'services',
+		'rewrite' => ['slug' => 'services', 'with_front' => false, 'paged' => 20],
+]);
+
+function isMain(){
+	return url('/') == url()->current();
+}
+
+function plugins(array $activePlugins = []):array
+{
+	static $activated = false;
+	
+	$pluginsRootFolder = public_path() . '/plugins/';
+	$pluginFolders = glob($pluginsRootFolder . '*');
+	
+	if(!$pluginFolders) return false;
+	
+	$plugins = [];
+	foreach($pluginFolders as $folder)
+	{
+		$basename = basename($folder);
+		$mainFile = $folder . '/' . $basename . '.php';
+		if(file_exists($mainFile))
+		{
+			$pluginPath = str_replace($pluginsRootFolder, '', $mainFile);
+			$isActive   = in_array($pluginPath, $activePlugins);
+			
+			if(!$activated && $isActive){
+				include $mainFile;
+			}
+			
+			$plugins[] = ['src' => $mainFile, 'active' => $isActive, 'path' => $pluginPath];
+		}
+	}
+	
+	$activated = true;
+	return $plugins;
+}
 
 // function addPageType(string $type, array $options){
 	// PostsTypes::set($type, $options);
@@ -178,16 +232,16 @@ function addPageType(string $type, array $options){
 	$paged = $options['rewrite']['paged'] ? "{$sep}page/{page}" : '';
 	
 	if ($options['has_archive']) {
-		Route::get($options['has_archive'] . '/{slug}', function($slug) use ($type, $pc, $sep, $paged){
+		Route::get($options['has_archive'] . '/{slug}', function($slug) use ($type, $pc){
 			return App::make($pc)->run($type, 'actionSingle', [$slug]);
 		});
 	}
 	
 	if ($options['has_archive']) {
-		Route::get($options['has_archive'] . $paged, function($page) use ($type, $pc, $sep, $paged){
+		Route::get($options['has_archive'] . $paged, function($page) use ($type, $pc){
 			return App::make($pc)->run($type, 'actionList', [$page]);
 		});
-		Route::get($options['has_archive'], function() use ($type, $pc, $sep, $paged){
+		Route::get($options['has_archive'], function() use ($type, $pc){
 			return App::make($pc)->run($type, 'actionList', [1]);
 		});
 	}
@@ -195,10 +249,10 @@ function addPageType(string $type, array $options){
 	if (!empty($options['taxonomy'])) {
 		if ($options['has_archive'] === false) $sep = '';
 		foreach ($options['taxonomy'] as $t => $values) {
-			Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}", function($tslug) use ($type, $pc, $sep, $paged){
+			Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}", function($tslug) use ($type, $pc){
 				return App::make($pc)->run($type, 'actionList', [1, $tslug, $t]);
 			});
-			Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}{$paged}", function($tslug, $page) use ($type, $pc, $sep, $paged){
+			Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}{$paged}", function($tslug, $page) use ($type, $pc){
 				return App::make($pc)->run($type, 'actionList', [$page, $tslug, $t]);
 			});
 		}
@@ -284,6 +338,16 @@ function theme_url(){
 
 function urlWithoutParams(){
 	return url('/') . explode('?', $_SERVER['REQUEST_URI'])[0];
+}
+
+function viewWrap($templateFileName, $post, $args = null){
+	if (isset($post['_jmp_post_template']) && $post['_jmp_post_template']) {
+		$templateFileName = $post['_jmp_post_template'];
+		// $templateFileName = strpos($post['_jmp_post_template'], '.php') === false ? $post['_jmp_post_template'] : substr($post['_jmp_post_template'], 0, -4);
+	}
+		
+	return $args ? view(Config::get('theme') . '.' . $templateFileName, $args) 
+				 : view(Config::get('theme') . '.' . $templateFileName) ;
 }
 
 

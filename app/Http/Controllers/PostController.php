@@ -11,11 +11,14 @@ use DB;
 class PostController extends Controller
 {
 	private $img = '_jmp_post_img';
+	private $launched = false;
 	
 	public function run($type, $method = null, $args = null)
 	// public function run($type)
 	{
-		dd(app()->get('request')->route()->getAction());
+		// dd(app()->get('request')->route()->getAction());
+		if ($this->launched) return;
+		$this->launched = true;
 		$this->model = new Post;
 		$this->model->taxonomy = new Taxonomy();
 		PostsTypes::setCurrentType($type);
@@ -32,7 +35,8 @@ class PostController extends Controller
 	{
 		// dd(__METHOD__);
 		// funKids_all();
-        extract($this->prepareArgs($request->route()->getAction(), func_get_args()) ?? []);
+        // extract($this->prepareArgs($request->route()->getAction(), func_get_args()) ?? []);
+		$this->run('page');
 		$frontPage = Config::get('front_page');
 		if (is_numeric($frontPage)) {
 			return $this->actionSingle($request, NULL, $frontPage);
@@ -47,45 +51,48 @@ class PostController extends Controller
 		// extract($this->prepareArgs($request->route()->getAction(), func_get_args()) ?? []);
 		// dd(__METHOD__, get_defined_vars());
 		// dd($this);
+		// dd($this->postOptions);
 		if ($id) {
 			if (!$post = Post::find($id)) {
 				abort(404);
 			} else {
 				$post->getMeta(true);
-				return view('single')->with('post', $post);
+				return viewWrap('single', $post)->with('post', $post);
 			}
-		}
-		$hierarchy 	= explode('/', $slug);
-		$slug 		= array_pop($hierarchy); // get last part
-		
-		if (!$post = Post::where('slug', $slug)->first()) {
-			abort(404);
-		}
-		$post->getMeta(true);
-		
-		// If this post is the front
-		if ($result = $this->checkFrontPageAliase($post['id'])) {
-			if (is_bool($result)) {
-				return view('single')->with('post', $post);
-			} else {
-				return $result;
+		} else {
+			$hierarchy 	= explode('/', $slug);
+			$slug 		= array_pop($hierarchy); // get last url part
+			
+			if (!$post = Post::where('slug', $slug)->first()) {
+				abort(404);
 			}
-		}
-		
-		// If type of this post related taxonomy
-		if (!$post->postOptions['hierarchical']) {
-			$post = $this->taxonomyPost($post);
-		} else { // If type of this post is hierarchical structure, check hierarchy
-			if (!empty($hierarchy)) {
-				if ($redirectResponce = $this->checkHierarchy($post['slug'], $post['parent'], $hierarchy)) {
-					return $redirectResponce;
+			$post->getMeta(true);
+			
+			// If this post is the front
+			if ($result = $this->checkFrontPageAliase($post['id'])) {
+				if (is_bool($result)) {
+					return viewWrap('single', $post)->with('post', $post);
+				} else {
+					return $result;
+				}
+			}
+			
+			// If type of this post related taxonomy
+			if (!$post->postOptions['hierarchical']) {
+				$post = $this->taxonomyPost($post);
+			} else { // If type of this post is hierarchical structure, check hierarchy
+				if (!empty($hierarchy)) {
+					if ($redirectResponce = $this->checkHierarchy($post['slug'], $post['parent'], $hierarchy)) {
+						return $redirectResponce;
+					}
 				}
 			}
 		}
-		// dd($this->breadcrumbs);
-		// $this->createBreadCrumbs($post, $taxonomy, $hierarchy, $post['terms']);
-	
-		return view('single')->with('post', $post);
+		
+		$this->createBreadCrumbs($post, NULL, $hierarchy, $post['terms']);
+		// dd($post);
+		// return view('single')->with('post', $post);
+		return viewWrap('single', $post)->with('post', $post);
 	}
 	
 	private function checkFrontPageAliase($postId)
@@ -231,28 +238,31 @@ class PostController extends Controller
 	// public function actionList(Request $request)
 	public function actionList(Request $request, $page = 1, $tslug = null, $taxonomy = null, $limit = null)
 	{
-		// dd(1);
-		// dd(func_get_args());
-		// extract($this->prepareArgs($request->route()->getAction(), func_get_args()) ?? []); // get type / tslug / page / taxonomy
-		$this->post = $this->postOptions;
 		$hierarchy = explode('/', $tslug);
 		
 		$result = $taxonomy ? $this->getPostsWithTaxonomy($taxonomy, $hierarchy)
 							: $this->getPostsWithoutTaxonomy();
 		
-		[$this->post['__list'], $termsFromExistsPost, $termsByPostsIds, $allTerms] = $result;
+		[$list, $termsFromExistsPost, $termsByPostsIds, $allTerms] = $result;
+		if (!$list) {
+			abort(404);
+		}
 		unset($result);
 				
-		$this->setPermalinkAndTerms($this->post['__list'], $termsByPostsIds, $termsFromExistsPost);
+		$this->setPermalinkAndTerms($list, $termsByPostsIds, $termsFromExistsPost);
 		$this->createFilters($termsByPostsIds);
 		$this->createBreadCrumbs($this->post, $taxonomy, $hierarchy, $termsByPostsIds, $tslug);
 		
+		$this->post['breadcrumbs'] 	= $this->breadcrumbs;
 		$this->post['pagination'] 	= $this->pagination($page);
 		$this->post['__model'] 		= $this->model;
-		$this->post['__list'] 		= $this->fillMeta($this->post['__list']);
-		$this->post['__list'] 		= applyFilter('before_return_post', $this->post['__list']);
+		$list 						= $this->fillMeta($list);
+		$list 						= applyFilter('before_return_post', $list);
 		
-		return view('list', ['post' => $this->post]);
+		$this->post['__list'] = $list;
+		unset($list);
+		
+		return viewWrap('list', $this->post, ['post' => $this->post]);
     }
 	
 	private function fillMeta($posts)
@@ -276,13 +286,11 @@ class PostController extends Controller
 			if (!empty($mediaIds)) {
 				$media = DB::table('media')->whereIn('id', $mediaIds)->get();
 				$mediaOnId = Arr::itemsOnKeys($media, ['id']);
-				// dd($media, $mediaOnId, $mediaIds, $postsOnId);
 				foreach ($mediaIds as $postId => $mediaId) {
 					$postsOnId[$postId][0]->{$this->img} = $mediaOnId[$mediaId][0]->src;
 					$postsOnId[$postId][0]->{$this->img . '_meta'} = unserialize($mediaOnId[$mediaId][0]->meta);
 				}
 			}
-			
 			
 			foreach($postsOnId as $post){
 				$post = $post[0];
@@ -305,6 +313,7 @@ class PostController extends Controller
 	private function createFilters($termsByPostsIds)
 	{
 		$archiveTerms = $termsByPostsIds[array_key_first($termsByPostsIds)];
+		if (!$archiveTerms) return;
 		[$termsOnId, $termsOnParent] = Arr::itemsOnKeys($archiveTerms, ['id', 'parent']);
 		$postTerms = $this->postTermsLink($termsOnId, $termsOnParent, $archiveTerms);
 		
@@ -450,7 +459,7 @@ class PostController extends Controller
 		
 		foreach ($hierarchy as $section) {
 			foreach ($termsByPostsIds as $term) {//dd($termsByPostsIds, $term, $section);
-				if ($term[0]->slug == $section) {
+				if ($term && $term[0]->slug == $section) {
 					$taxonomyName[] = $term[0]->name;
 					break;
 				}
@@ -464,17 +473,18 @@ class PostController extends Controller
 		$value = $type = $taxonomyName;
 		
 		$taxonomyTitle = $taxonomy ? $this->postOptions['taxonomy'][$taxonomy]['title'] : '';
-		
+		// dd($this->postOptions);
+		$this->breadcrumbs[url('/')] = 'Главная';
 		if($this->postOptions['has_archive'] && !$this->postOptions['rewrite']['with_front']){
-			$this->breadcrumbs[($this->postOptions['has_archive'])] = $this->postOptions['title'];
+			$this->breadcrumbs[(url('/') . '/' . $this->postOptions['has_archive'])] = $this->postOptions['title'];
 		}
 		
 		$post['short_title'] = isset($post['short_title']) && $post['short_title'] ? $post['short_title'] : $post['title'];
-		if ($type) {
-			if (is_array($value)) {
-				$value = implode(' > ', $value);
+		if ($taxonomyName) {
+			if (is_array($taxonomyName)) {
+				$taxonomyName = implode(' > ', $taxonomyName);
 			}
-			$this->addBreadCrumbsHelper($taxonomyTitle, $value, $taxonomyTitle, $post['short_title']);
+			$this->addBreadCrumbsHelper($taxonomyTitle, $taxonomyName, $taxonomyTitle, $post['short_title']);
 		} elseif (isset($post['id']) && Config::get('front_page') != $post['id']) {
 			$this->breadcrumbs[$post['slug']] = $post['short_title'];
 			
@@ -484,7 +494,7 @@ class PostController extends Controller
 			}	
 		}
 		
-		$this->post['breadcrumbs'] = $this->breadcrumbs;
+		Config::set('breadcrumbs', $this->breadcrumbs);
 	}
 	
 	private function addBreadCrumbsHelper($taxonomyTitle, $value, $text, &$postTitle)
