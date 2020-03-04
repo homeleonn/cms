@@ -78,7 +78,7 @@
 		
 		<div class="content">
 			<div class="container-fluid breadcrumbs">
-				<div class="container"><?=Options::getBreadcrumbs()?></div>
+				<div class="container"><?=($post['breadcrumbs'] ?? '')?></div>
 			</div>
 				@yield('content')
 				</div>

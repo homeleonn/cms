@@ -5,7 +5,7 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 
 use DB;
-use App\Helpers\{Arr, Config};
+use App\Helpers\{Arr, Options};
 
 class Post extends Model
 {
@@ -130,6 +130,11 @@ class Post extends Model
 	
 	public function getTheme()
 	{
-		return Config::get('theme');
+		return Options::get('theme');
+	}
+	
+	public function metas()
+	{
+		return $this->hasMany('App\Postmeta', 'post_id', 'id');
 	}
 }

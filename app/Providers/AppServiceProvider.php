@@ -23,6 +23,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-		
+		$this->app->singleton('Options', function ($app) {
+			return new \App\Helpers\Options(base_path() . '/options.php');
+		});
     }
 }

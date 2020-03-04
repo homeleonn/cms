@@ -2,8 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use Closure;
-use App\Helpers\Config;
+use Closure, Options;
 
 class ProjectInitialization
 {
@@ -16,15 +15,27 @@ class ProjectInitialization
      */
     public function handle($request, Closure $next)
     {
-		Config::optionsLoad();
-		Config::set('controller', 'App\Http\Controllers\PostController');
-		plugins(unserialize(Config::get('plugins_activated')));
-		require public_path() . '/themes/' . Config::get('theme') . '/functions.php';
+		Options::set('controller', 'App\Http\Controllers\PostController');
+		// dd(Options::get('plugins_activated'));
+		// Options::save();
+		// Options::delete('description');exit;
+		// setOption('foo', 'bar');
+		plugins(Options::get('plugins_activated', true));
+		require public_path() . '/themes/' . Options::get('theme') . '/functions.php';
 		
-		// \View::addLocation(resource_path() . '/views/' . Config::get('theme'));
+		// \View::addLocation(resource_path() . '/views/' . Options::get('theme'));
 		// dd(\App::make('view'), resource_path());
 		// dd(get_class_methods(\App::make('view')));
+		// ob_start('a');
+		// dd($request, requestUri());
+		// setCache();
         $response = $next($request);
+		
+		// dd($response);
+		// ob_flush();
+		// $a = ob_get_contents();
+		// dd($a);
+		
 		// dd(get_class_methods($response));
 		// dd($response, \App::make('view'));
 		// $post = $response->getOriginalContent()->getData()[0]['post'];

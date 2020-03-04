@@ -2,11 +2,13 @@
 
 use App\Helpers\PostsTypes;
 use App\Helpers\Arr;
-use App\Helpers\Config;
 
 function vd($exit, ...$args){
-	$trace = debug_backtrace()[1];
-	echo '<small style="color: green;"><pre>',$trace['file'],':',$trace['line'],':</pre></small><pre>';
+	if (true) {
+		$trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
+		echo '<small style="color: green;"><pre>',$trace['file'],':',$trace['line'],':</pre></small><pre>';
+	}
+	
 	call_user_func_array(!$exit ? 'dump' : 'dd', $args[0] ? [$args[0]]: [NULL]);
 }
 
@@ -16,8 +18,41 @@ function d(){
 
 function ddd(){
 	vd(true, func_get_args());
-	// requestStats();
-	// exit;
+}
+
+function requestUri(){
+	return $_SERVER['REQUEST_URI'];
+}
+
+
+if (!function_exists('array_key_first')) {
+    function array_key_first(array $arr) {
+        foreach($arr as $key => $unused) {
+            return $key;
+        }
+        return NULL;
+    }
+}
+
+function arrayInCode($array, $arrayName = null, $level  = 0) {
+	$tabs = str_repeat("\t", $level + 1);
+	$code = '';
+	$code .= (!$level ? ($arrayName ? '$' . $arrayName . ' = ' : 'return ') . '[' : "[\n");
+	foreach ($array as $key => $value) {
+		if (is_array($value)) {
+			if ($level < 1) $code .= "\n";
+			$code .= "{$tabs}'{$key}' => ";
+			$code .= arrayInCode($value, $arrayName, $level + 1);
+		} else {
+			if ($level == 0) $code .= "\n";
+			$code .= "{$tabs}'{$key}' => '{$value}',\n";
+		}
+	}
+	if ($level > 1) $code .= str_repeat("\t", $level - 1);
+	$code .= $level ? "\t]" : "]";
+	$code .= !$level ?  ';' : ',';if ($level > 1) $code .= "\n";
+	
+	return $code;
 }
 
 addPageType('post', [
@@ -87,22 +122,22 @@ addPageType('program', [
 		'hierarchical' => false,
 		'has_archive'  => 'programs',
 		'rewrite' => ['slug' => 'programs', 'with_front' => false, 'paged' => 20],
-		'taxonomy' => [
-			'age' => [
-				'title' => 'Возрастная категория',
-				'add' => 'Добавить возрастную категорию',
-				'edit' => 'Редактировать возрастную категорию',
-				'delete' => 'Удалить возрастную категорию',
-				'hierarchical' => true,
-			],
-			'gen' => [
-				'title' => 'Пол ребенка',
-				'add' => 'Добавить возрастную категорию',
-				'edit' => 'Редактировать возрастную категорию',
-				'delete' => 'Удалить возрастную категорию',
-				'hierarchical' => true,
-			],
-		]
+		// 'taxonomy' => [
+			// 'age' => [
+				// 'title' => 'Возрастная категория',
+				// 'add' => 'Добавить возрастную категорию',
+				// 'edit' => 'Редактировать возрастную категорию',
+				// 'delete' => 'Удалить возрастную категорию',
+				// 'hierarchical' => true,
+			// ],
+			// 'gen' => [
+				// 'title' => 'Пол ребенка',
+				// 'add' => 'Добавить возрастную категорию',
+				// 'edit' => 'Редактировать возрастную категорию',
+				// 'delete' => 'Удалить возрастную категорию',
+				// 'hierarchical' => true,
+			// ],
+		// ]
 ]);
 
 addPageType('service', [
@@ -120,6 +155,11 @@ addPageType('service', [
 		'has_archive'  => 'services',
 		'rewrite' => ['slug' => 'services', 'with_front' => false, 'paged' => 20],
 ]);
+
+
+function getRawOptions(){
+	// return
+}
 
 function isMain(){
 	return url('/') == url()->current();
@@ -333,7 +373,7 @@ function postImgSrc($post, $thumbnail = 'orig'){
 
 
 function theme_url(){
-	return url('/') . '/themes/' . Config::get('theme') . '/';
+	return url('/') . '/themes/' . Options::get('theme') . '/';
 }
 
 function urlWithoutParams(){
@@ -346,8 +386,8 @@ function viewWrap($templateFileName, $post, $args = null){
 		// $templateFileName = strpos($post['_jmp_post_template'], '.php') === false ? $post['_jmp_post_template'] : substr($post['_jmp_post_template'], 0, -4);
 	}
 		
-	return $args ? view(Config::get('theme') . '.' . $templateFileName, $args) 
-				 : view(Config::get('theme') . '.' . $templateFileName) ;
+	return $args ? view(Options::get('theme') . '.' . $templateFileName, $args) 
+				 : view(Options::get('theme') . '.' . $templateFileName) ;
 }
 
 

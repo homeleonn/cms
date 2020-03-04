@@ -1,8 +1,8 @@
 <?php
 //var_dump($_SERVER);exit;
-ini_set('xdebug.var_display_max_depth', 50);
-ini_set('xdebug.var_display_max_children', 256);
-ini_set('xdebug.var_display_max_data', 1024);
+// ini_set('xdebug.var_display_max_depth', 50);
+// ini_set('xdebug.var_display_max_children', 256);
+// ini_set('xdebug.var_display_max_data', 1024);
 ini_set('date.timezone', 'Europe/Kiev');
 ini_set('xdebug.overload_var_dump', '1');
 const URL_PATTERN 		= '[а-яА-ЯЁa-zA-Z0-9-]+';

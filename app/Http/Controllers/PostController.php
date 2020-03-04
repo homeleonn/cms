@@ -5,18 +5,19 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 
 use App\{Post, Taxonomy};
-use App\Helpers\{PostsTypes, Arr, Pagination, Config};
+use App\Helpers\{PostsTypes, Arr, Pagination};
 use DB;
+use Options;
 
 class PostController extends Controller
 {
-	private $img = '_jmp_post_img';
-	private $launched = false;
+	private $img 		= '_jmp_post_img';
+	private $launched 	= null;
+	private $template 	= null;
 	
 	public function run($type, $method = null, $args = null)
-	// public function run($type)
 	{
-		// dd(app()->get('request')->route()->getAction());
+		// dd(func_get_args(), get_defined_vars());
 		if ($this->launched) return;
 		$this->launched = true;
 		$this->model = new Post;
@@ -25,39 +26,52 @@ class PostController extends Controller
 		$this->postOptions = $this->post = PostsTypes::getCurrent();
 		$this->breadcrumbs = [];
 		
-		if ($method) {
-			array_unshift($args, app()->get('request'));
-			return $this->$method(...$args);
+		if ($method) {		
+			return $this->$method(...$args);	
 		}
 	}
 	
-    public function actionIndex(Request $request)
+    public function actionIndex()
 	{
-		// dd(__METHOD__);
-		// funKids_all();
-        // extract($this->prepareArgs($request->route()->getAction(), func_get_args()) ?? []);
-		$this->run('page');
-		$frontPage = Config::get('front_page');
+		$frontPage = Options::get('front_page');
 		if (is_numeric($frontPage)) {
-			return $this->actionSingle($request, NULL, $frontPage);
+			$this->run('page');
+			return $this->actionSingle(NULL, $frontPage);
 		} else {
+			$this->run('post');
 			return $this->last();
 		}
     }
 	
-	public function actionSingle(Request $request, $slug, $id = null)
+	public function last(){
+		$this->template = 'front';
+		return $this->actionList();
+	}
+	
+	private function checkCache()
 	{
+		$funkidsFileCacheName = (is_null($id) ? md5($url) : ($id == getOption('front_page') ? $id : ''));
+		if($funkidsFileCacheName != ''){
+			//if(!is_null($id))
+				if(Common::getCache($funkidsFileCacheName = 'pages/' . $funkidsFileCacheName, -1) !== FALSE){$this->view->rendered = true;return;}	
+		}
+	}
+	
+	public function actionSingle($slug, $id = null)
+	{
+		// global $funkidsFileCacheName;
+		// $funkidsFileCacheName = (is_null($id) ? md5($url) : ($id == getOption('front_page') ? $id : ''));
+		// if($funkidsFileCacheName != ''){
+			// //if(!is_null($id))
+				// if(Common::getCache($funkidsFileCacheName = 'pages/' . $funkidsFileCacheName, -1) !== FALSE){$this->view->rendered = true;return;}	
+		// }
 		$this->run('page');
-		// extract($this->prepareArgs($request->route()->getAction(), func_get_args()) ?? []);
-		// dd(__METHOD__, get_defined_vars());
-		// dd($this);
-		// dd($this->postOptions);
 		if ($id) {
 			if (!$post = Post::find($id)) {
 				abort(404);
 			} else {
 				$post->getMeta(true);
-				return viewWrap('single', $post)->with('post', $post);
+				return viewWrap($this->getTemplate('single'), $post)->with('post', $post);
 			}
 		} else {
 			$hierarchy 	= explode('/', $slug);
@@ -71,7 +85,7 @@ class PostController extends Controller
 			// If this post is the front
 			if ($result = $this->checkFrontPageAliase($post['id'])) {
 				if (is_bool($result)) {
-					return viewWrap('single', $post)->with('post', $post);
+					return viewWrap($this->getTemplate('single'), $post)->with('post', $post);
 				} else {
 					return $result;
 				}
@@ -90,14 +104,12 @@ class PostController extends Controller
 		}
 		
 		$this->createBreadCrumbs($post, NULL, $hierarchy, $post['terms']);
-		// dd($post);
-		// return view('single')->with('post', $post);
-		return viewWrap('single', $post)->with('post', $post);
+		return viewWrap($this->getTemplate('single'), $post)->with('post', $post);
 	}
 	
 	private function checkFrontPageAliase($postId)
 	{
-		if ($postId == Config::get('front_page')) {
+		if ($postId == Options::get('front_page')) {
 			if(url('/') != urlWithoutParams()) {
 				return redirect('/', 301);
 			}
@@ -235,11 +247,9 @@ class PostController extends Controller
 		return $post;
 	}
 	
-	// public function actionList(Request $request)
-	public function actionList(Request $request, $page = 1, $tslug = null, $taxonomy = null, $limit = null)
+	public function actionList($page = 1, $tslug = null, $taxonomy = null, $limit = null)
 	{
 		$hierarchy = explode('/', $tslug);
-		
 		$result = $taxonomy ? $this->getPostsWithTaxonomy($taxonomy, $hierarchy)
 							: $this->getPostsWithoutTaxonomy();
 		
@@ -253,17 +263,21 @@ class PostController extends Controller
 		$this->createFilters($termsByPostsIds);
 		$this->createBreadCrumbs($this->post, $taxonomy, $hierarchy, $termsByPostsIds, $tslug);
 		
-		$this->post['breadcrumbs'] 	= $this->breadcrumbs;
 		$this->post['pagination'] 	= $this->pagination($page);
 		$this->post['__model'] 		= $this->model;
 		$list 						= $this->fillMeta($list);
 		$list 						= applyFilter('before_return_post', $list);
 		
-		$this->post['__list'] = $list;
+		$this->post['__list'] 		= $list;
 		unset($list);
 		
-		return viewWrap('list', $this->post, ['post' => $this->post]);
+		return viewWrap($this->getTemplate('list'), $this->post, ['post' => $this->post]);
     }
+	
+	private function getTemplate($default)
+	{
+		return $this->template ?? $default;
+	}
 	
 	private function fillMeta($posts)
 	{
@@ -273,7 +287,7 @@ class PostController extends Controller
 		$meta = $this->model->getRawMeta($ids);
 		
 		$comments = [];
-		$commnetsOnId = $comments ? Arr::itemsOnKeys($comments, ['comment_post_id']) : [];
+		$commentsOnId = $comments ? Arr::itemsOnKeys($comments, ['comment_post_id']) : [];
 		
 		if ($meta) {
 			$posts = $mediaIds = [];
@@ -294,10 +308,11 @@ class PostController extends Controller
 			
 			foreach($postsOnId as $post){
 				$post = $post[0];
-				$post->comment_count = isset($commnetsOnId[$post->id]) ? count($commnetsOnId[$post->id]) : 0;
+				$post->comment_count = isset($commentsOnId[$post->id]) ? count($commentsOnId[$post->id]) : 0;
 				$posts[] = $post;
 			}
 		}
+		
 		return $posts;
 	}
 	
@@ -307,7 +322,7 @@ class PostController extends Controller
 			return false;
 		}
 		
-		return Config::get('front_page') == $this->post->id;
+		return Options::get('front_page') == $this->post->id;
 	}
 	
 	private function createFilters($termsByPostsIds)
@@ -457,11 +472,14 @@ class PostController extends Controller
 		// Узнаем имя таксономии по метке для хлебных крошек
 		$taxonomyName = [];
 		
-		foreach ($hierarchy as $section) {
-			foreach ($termsByPostsIds as $term) {//dd($termsByPostsIds, $term, $section);
-				if ($term && $term[0]->slug == $section) {
-					$taxonomyName[] = $term[0]->name;
-					break;
+		if ($termsByPostsIds)
+		{
+			foreach ($hierarchy as $section) {
+				foreach ($termsByPostsIds as $term) {//dd($termsByPostsIds, $term, $section);
+					if ($term && $term[0]->slug == $section) {
+						$taxonomyName[] = $term[0]->name;
+						break;
+					}
 				}
 			}
 		}
@@ -470,23 +488,22 @@ class PostController extends Controller
 			$taxonomyName = $tslug;
 		}
 		
-		$value = $type = $taxonomyName;
+		$value 							= $type = $taxonomyName;
+		$taxonomyTitle 					= $taxonomy ? $this->postOptions['taxonomy'][$taxonomy]['title'] : '';
+		$breadcrumbs[url('/')] 			= 'Главная';
+		$post['short_title'] 			= isset($post['short_title']) && $post['short_title'] ? $post['short_title'] : $post['title'];
 		
-		$taxonomyTitle = $taxonomy ? $this->postOptions['taxonomy'][$taxonomy]['title'] : '';
-		// dd($this->postOptions);
-		$this->breadcrumbs[url('/')] = 'Главная';
 		if($this->postOptions['has_archive'] && !$this->postOptions['rewrite']['with_front']){
-			$this->breadcrumbs[(url('/') . '/' . $this->postOptions['has_archive'])] = $this->postOptions['title'];
+			$breadcrumbs[(url('/') . '/' . $this->postOptions['has_archive'])] = $this->postOptions['title'];
 		}
 		
-		$post['short_title'] = isset($post['short_title']) && $post['short_title'] ? $post['short_title'] : $post['title'];
 		if ($taxonomyName) {
 			if (is_array($taxonomyName)) {
 				$taxonomyName = implode(' > ', $taxonomyName);
 			}
-			$this->addBreadCrumbsHelper($taxonomyTitle, $taxonomyName, $taxonomyTitle, $post['short_title']);
-		} elseif (isset($post['id']) && Config::get('front_page') != $post['id']) {
-			$this->breadcrumbs[$post['slug']] = $post['short_title'];
+			$this->addBreadCrumbsHelper($post, $taxonomyTitle, $taxonomyName, $taxonomyTitle, $post['short_title']);
+		} elseif (isset($post['id']) && Options::get('front_page') != $post['id']) {
+			$breadcrumbs[$post['slug']] = $post['short_title'];
 			
 			if($this->postOptions['title']){
 				$post['h1'] = $post['title'];
@@ -494,37 +511,28 @@ class PostController extends Controller
 			}	
 		}
 		
-		Config::set('breadcrumbs', $this->breadcrumbs);
+		$post['breadcrumbs'] = $this->getBreadcrumbsHtml($breadcrumbs);
 	}
 	
-	private function addBreadCrumbsHelper($taxonomyTitle, $value, $text, &$postTitle)
+	private function addBreadCrumbsHelper(&$post, $taxonomyTitle, $value, $text, &$postTitle)
 	{
-		//dd(func_get_args());
-		$this->breadcrumbs[$taxonomyTitle] = $text . ': ' . $value;
+		$post['breadcrumbs'][$taxonomyTitle] = $text . ': ' . $value;
 		$postTitle = $taxonomyTitle . ': ' . $value . ' | ' . $postTitle;
 	}
 	
-	public function __call($method, $args)
-	{
-		dd(func_get_args());
-		[$method, $args] = explode('__', $method);
-		$args = explode('00', $args);
-		$postType = array_shift($args);
-		$this->run($postType);
-		
-		// if ($method == 'actionSingle') {
-			
-		// } elseif ($method == 'actionList') {
-			
-		// }
-		array_unshift($args, app()->get('request'));
-		
-		$this->$method(...$args);
-	}
 	
-	public function foo()
+	
+	public function getBreadcrumbsHtml(array $bc): string
 	{
-		dd(__METHOD__, func_get_args());
+		$bcCount 	= count($bc);
+		$i 			= 0;
+		$html 		= '<div id="breadcrumbs">';
+		
+		foreach ($bc as $url => $name) {
+			$html .= ++$i == $bcCount ? $name : "<a href=\"{$url}\">{$name}</a> > ";
+		}
+		
+		return $html . '</div>';
 	}
 }
 
