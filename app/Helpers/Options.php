@@ -36,6 +36,11 @@ class Options
 		return $decode ? unserialize($this->options[$key]) : $this->options[$key];
 	}
 	
+	public function getAll()
+	{
+		return $this->options;
+	}
+	
 	public function has(string $key): bool
 	{
 		return isset($this->options[$key]);
@@ -44,18 +49,9 @@ class Options
 	public function save(string $key, $value, bool $encode = false): void
 	{
 		$options = $this->getSavedOptions();
-		
-		if ($encode) $value = serialize($value);
-		
-		$optionPattern = '~(\''.$key.'\'\s*=>\s*)\'(.*)\'~';
-		$optionReplace = '$1\''.$value.'\'';
-		$newOption = "\t'{$key}' => '{$value}',\r\n]";
-		
-		$newOptions = preg_match($optionPattern, $options) ? preg_replace($optionPattern, $optionReplace, $options)
-														   : preg_replace('~]~', $newOption, $options);
-		
+		$options[$key] = !$encode ? $value : serialize($value);
 		$this->set($key, $value);
-		$this->saveOptions($newOptions);
+		$this->saveOptions($options);
 	}
 
 	public function delete(string $key): void
@@ -64,7 +60,7 @@ class Options
 		
 		if (isset($options[$key])) {
 			unset($options[$key]);
-			$this->saveOptions("<?php\n\n" . arrayInCode($options));
+			$this->saveOptions($options);
 		}
 		
 		if (isset($this->options[$key])) {
@@ -72,13 +68,13 @@ class Options
 		}
 	}
 	
-	private function getSavedOptions(): string
+	private function getSavedOptions(bool $asArray = true)
 	{
-		return file_get_contents($this->optionsPath);
+		return $asArray ? include $this->optionsPath : file_get_contents($this->optionsPath);
 	}
 	
 	private function saveOptions(array $options = null)
 	{
-		file_put_contents($this->optionsPath, $options ?? $this->options);
+		file_put_contents($this->optionsPath, "<?php\n\n" . Arr::arrayInCode($options ?? $this->options));
 	}
 }

@@ -3,6 +3,8 @@
 use App\Helpers\PostsTypes;
 use App\Helpers\Arr;
 
+require 'posttypes.php';
+
 function vd($exit, ...$args){
 	if (true) {
 		$trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
@@ -24,6 +26,23 @@ function requestUri(){
 	return $_SERVER['REQUEST_URI'];
 }
 
+function cache_path(){
+	return uploads_path() . '/cache/front/' . md5(requestUri()) . '.html';
+}
+
+function setCache($data){
+	if (Options::get('cache_enable')) {
+		file_put_contents(cache_path(), $data);
+	}
+}
+
+function getCache(){
+	if (Options::get('cache_enable') && file_exists(cache_path())) {
+		return file_get_contents(cache_path());
+	}
+	return false;
+}
+
 
 if (!function_exists('array_key_first')) {
     function array_key_first(array $arr) {
@@ -34,127 +53,7 @@ if (!function_exists('array_key_first')) {
     }
 }
 
-function arrayInCode($array, $arrayName = null, $level  = 0) {
-	$tabs = str_repeat("\t", $level + 1);
-	$code = '';
-	$code .= (!$level ? ($arrayName ? '$' . $arrayName . ' = ' : 'return ') . '[' : "[\n");
-	foreach ($array as $key => $value) {
-		if (is_array($value)) {
-			if ($level < 1) $code .= "\n";
-			$code .= "{$tabs}'{$key}' => ";
-			$code .= arrayInCode($value, $arrayName, $level + 1);
-		} else {
-			if ($level == 0) $code .= "\n";
-			$code .= "{$tabs}'{$key}' => '{$value}',\n";
-		}
-	}
-	if ($level > 1) $code .= str_repeat("\t", $level - 1);
-	$code .= $level ? "\t]" : "]";
-	$code .= !$level ?  ';' : ',';if ($level > 1) $code .= "\n";
-	
-	return $code;
-}
 
-addPageType('post', [
-		'type' => 'post',
-		'title' => 'Блог',
-		'h1' => 'Блог',
-		'title_for_admin' => 'Записи',
-		'description' => 'Блог',
-		'add' => 'Добавить запись',
-		'edit' => 'Редактировать запись',
-		'delete' => 'Удалить запись',
-		'common' => 'записей',
-		'hierarchical' => false,
-		'has_archive'  => 'blog',
-		'taxonomy' => [
-			'category' => [
-				'title' => 'Категория',
-				'add' => 'Добавить категорию',
-				'edit' => 'Редактировать категорию',
-				'delete' => 'Удалить категорию',
-				'hierarchical' => false,
-			],
-		],
-		'rewrite' => ['slug' => 'blog/%category%', 'with_front' => false, 'paged' => 20],
-]);
-
-
-
-addPageType('page', [
-		'type' => 'page',
-		'title' => '',
-		'title_for_admin' => 'Страницы',
-		'description' => 'Страницы',
-		'add' => 'Добавить страницу',
-		'edit' => 'Редактировать страницу',
-		'delete' => 'Удалить страницу',
-		'common' => 'страниц',
-		'hierarchical' => true,
-		'has_archive'  => false,
-		'taxonomy' => [],
-		'rewrite' => ['slug' =>'', 'with_front' => true, 'paged' => false],
-]);
-
-
-addPageType('test', [
-		'title' => 'Test',
-		'description' => 'Test Description',
-		'h1' => 'Test',
-		'hierarchical' => false,
-		'has_archive'  => 'tests',
-		'rewrite' => ['slug' => 'tests', 'with_front' => false, 'paged' => 20],
-		'taxonomy' => [
-			'newscat' => [
-				'title' => 'Возрастная категория',
-				'add' => 'Добавить возрастную категорию',
-				'edit' => 'Редактировать возрастную категорию',
-				'delete' => 'Удалить возрастную категорию',
-				'hierarchical' => true,
-			],
-		]
-]);
-
-addPageType('program', [
-		'title' => 'Программы',
-		'description' => 'Programs Description',
-		'h1' => 'Программы',
-		'hierarchical' => false,
-		'has_archive'  => 'programs',
-		'rewrite' => ['slug' => 'programs', 'with_front' => false, 'paged' => 20],
-		// 'taxonomy' => [
-			// 'age' => [
-				// 'title' => 'Возрастная категория',
-				// 'add' => 'Добавить возрастную категорию',
-				// 'edit' => 'Редактировать возрастную категорию',
-				// 'delete' => 'Удалить возрастную категорию',
-				// 'hierarchical' => true,
-			// ],
-			// 'gen' => [
-				// 'title' => 'Пол ребенка',
-				// 'add' => 'Добавить возрастную категорию',
-				// 'edit' => 'Редактировать возрастную категорию',
-				// 'delete' => 'Удалить возрастную категорию',
-				// 'hierarchical' => true,
-			// ],
-		// ]
-]);
-
-addPageType('service', [
-		'type' => 'service',
-		'title' => 'Доп. услуги',
-		'_seo_title' => 'Дополнительные услуги | Funkids',
-		'h1' => 'Дополнительные услуги',
-		'title_for_admin' => 'Доп. услуги',
-		'description' => 'Дополнительные услуги на детский праздник, мыльные пузыри, сладкая вата, всё что бы разнообразить праздничный день, запоминающиеся мгновения жизни ребенка | FunKids',
-		'add' => 'Добавить услугу',
-		'edit' => 'Редактировать услугу',
-		'delete' => 'Удалить услугу',
-		'common' => 'услуг',
-		'hierarchical' => false,
-		'has_archive'  => 'services',
-		'rewrite' => ['slug' => 'services', 'with_front' => false, 'paged' => 20],
-]);
 
 
 function getRawOptions(){
@@ -289,10 +188,10 @@ function addPageType(string $type, array $options){
 	if (!empty($options['taxonomy'])) {
 		if ($options['has_archive'] === false) $sep = '';
 		foreach ($options['taxonomy'] as $t => $values) {
-			Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}", function($tslug) use ($type, $pc){
+			Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}", function($tslug) use ($type, $pc, $t){
 				return App::make($pc)->run($type, 'actionList', [1, $tslug, $t]);
 			});
-			Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}{$paged}", function($tslug, $page) use ($type, $pc){
+			Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}{$paged}", function($tslug, $page) use ($type, $pc, $t){
 				return App::make($pc)->run($type, 'actionList', [$page, $tslug, $t]);
 			});
 		}
@@ -301,6 +200,10 @@ function addPageType(string $type, array $options){
 
 function uploads_url(){
 	return url('/') . '/uploads/';
+}
+
+function uploads_path(){
+	return public_path() . '/uploads/';
 }
 
 function add($type, $funcName, $userFunc, $front = false){
@@ -385,10 +288,19 @@ function viewWrap($templateFileName, $post, $args = null){
 		$templateFileName = $post['_jmp_post_template'];
 		// $templateFileName = strpos($post['_jmp_post_template'], '.php') === false ? $post['_jmp_post_template'] : substr($post['_jmp_post_template'], 0, -4);
 	}
-		
-	return $args ? view(Options::get('theme') . '.' . $templateFileName, $args) 
-				 : view(Options::get('theme') . '.' . $templateFileName) ;
+	
+	return view(Options::get('theme') . '.' . $templateFileName, $args ?? []);
 }
+
+function redir($url = NULL, $code = 301){
+		$codes = [
+			301 => 'Moved Permanently',
+		];
+			
+		header("HTTP/1.1 {$code} {$codes[$code]}");
+		header('Location:' . $url);
+		exit;
+	}
 
 
 
@@ -396,16 +308,21 @@ addFilter('postTypeLink', 'myPostTypeLink');
 function myPostTypeLink($link, $termsOnId, $termsOnParent, $postTerms){//dd(func_get_args());
 	$replaceFormat = '/%.*%/';
 	if(!preg_match($replaceFormat, $link)) return $link;
+	// dd($postTerms, Arr::itemsOnKeys($postTerms, ['id']));
 	if(!$postTerms){
 		$formatComponent = 'uncategorized';
 	}elseif(is_string($postTerms)){
 		$formatComponent = $postTerms;
 	}else{
-		$postTermsOnId = Arr::itemsOnKeys($postTerms, ['id']);
-		$current = $postTermsOnId[array_keys($postTermsOnId)[0]][0];
-		$mergeKey = 'slug';
-		// $formatComponent = str_replace('|', '/', substr(Arr::builtHierarchyDown($termsOnId, $current, $mergeKey) . '|' . $current[$mergeKey] . '|' . Arr::builtHierarchyUp($termsOnParent, $current, $postTermsOnId, $mergeKey), 1, -1));
-		$formatComponent = '---';
+		if (count($postTerms) == 1) {
+			$formatComponent = $postTerms[0]->slug;
+		} else {
+			$postTermsOnId = Arr::itemsOnKeys($postTerms, ['id']);
+			$current = $postTermsOnId[array_keys($postTermsOnId)[0]][0];
+			$mergeKey = 'slug';
+			$formatComponent = str_replace('|', '/', substr(Arr::builtHierarchyDown($termsOnId, $current, $mergeKey) . '|' . $current[$mergeKey] . '|' . Arr::builtHierarchyUp($termsOnParent, $current, $postTermsOnId, $mergeKey), 1, -1));
+			// $formatComponent = '---';
+		}
 	}
 	return preg_replace($replaceFormat, $formatComponent, $link);
 }

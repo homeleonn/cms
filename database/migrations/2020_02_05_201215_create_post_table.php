@@ -26,8 +26,8 @@ class CreatePostTable extends Migration
 			$table->unsignedBigInteger('author')->nullable();
 			$table->enum('status', ['publish', 'draft'])->default('draft');
 			$table->enum('comment_status', ['open','closed'])->default('closed');
-			$table->unsignedBigInteger('comment_count')->default(0);
-			$table->unsignedBigInteger('visits')->default(0);
+			$table->unsignedBigInteger('comment_count')->nullable();
+			$table->unsignedBigInteger('visits')->nullable();
 			$table->timestamps();
 			$table->index('slug');
 			$table->index('post_type');

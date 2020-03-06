@@ -39,4 +39,86 @@ class Arr{
 	{
 		return substr(str_repeat('?,', count($arr)), 0, -1);
 	}
+	
+	
+	
+	public static function arrayInCode($array, $arrayName = null, $level  = 0) {
+		$tabs = str_repeat("\t", $level + 1);
+		$code = '';
+		$code .= (!$level ? ($arrayName ? '$' . $arrayName . ' = ' : 'return ') . '[' : "[\n");
+		foreach ($array as $key => $value) {
+			if (is_array($value)) {
+				if ($level < 1) $code .= "\n";
+				$code .= "{$tabs}'{$key}' => ";
+				$code .= arrayInCode($value, $arrayName, $level + 1);
+			} else {
+				if ($level == 0) $code .= "\n";
+				$code .= "{$tabs}'{$key}' => '{$value}',\n";// . ($level ? "\n" : "");
+			}
+			
+		}
+		if ($level > 1) $code .= str_repeat("\t", $level - 1);
+		$code .= (!$level ? "\n" : '') . ($level ? "\t]" : "]");
+		$code .= !$level ?  ';' : ',';
+		
+		return $code;
+	}
+	
+	
+	public static function builtHierarchyDown(&$itemsOnId, $current, $mergeKey, $level = 0)
+	{
+		if ($level > 10) exit('stop recursion');
+		$hierarchy = '';
+		if (isset($itemsOnId[$current->parent][0])) {
+			$next = $itemsOnId[$current->parent][0];
+			$hierarchy = self::builtHierarchyDown($itemsOnId, $next, $mergeKey, $level + 1) . '|' . $next[$mergeKey];
+		}
+		return $hierarchy;
+	}
+	
+	public static function builtHierarchyUp($itemsOnParent, $current, $postTermsOnId, $mergeKey, $level = 0)
+	{
+		if($level > 10) exit('stop recursion');
+		$hierarchy = '';
+		
+		if(isset($itemsOnParent[$current['id']])){
+			foreach($itemsOnParent[$current['id']] as $possibleNext){
+				if($possibleNext['parent'] == $current['id'] && isset($postTermsOnId[$possibleNext['id']])){
+					$next = $possibleNext;
+				}
+			}
+			if(isset($next))
+				$hierarchy = $next[$mergeKey] . '|' . self::builtHierarchyUp($itemsOnParent, $next, $mergeKey, $level + 1);
+		}
+		return $hierarchy;
+	}
+	
+	public static function termsHTML($taxonomies, $archive)
+	{
+		if(!is_array($taxonomies)) return false;
+		$html = '';
+		foreach($taxonomies as $taxName => $terms){
+			$html .= "<li>{$taxName}:";
+			foreach($terms as $termName => $termLink){
+				$html .= " <a href='". url('/') . '/' . $archive . "/{$termLink}'>{$termName}</a>,";
+			}
+			$html = substr($html, 0, -1) . '</li>';
+		}
+		return '<ul class="terms">' . $html . '</ul>';
+	}
+	
+	public static function archiveTermsHTML($taxonomies, $archive)
+	{
+		if(!is_array($taxonomies)) return false;
+		$html = '';
+		foreach($taxonomies as $taxName => $terms){
+			$html .= '<div class="filters"><div class="title">' . $taxName . '</div><div class="content">';
+			foreach($terms as $termName => $termLink){
+				$html .= " <a href='". url('/') . '/' . $archive . "/{$termLink}'>{$termName}</a>";
+			}
+			$html .= " <a href='". url('/') . '/' . $archive . "'>Все</a>";
+			$html .= '</div></div>';
+		}
+		return $html;
+	}
 }

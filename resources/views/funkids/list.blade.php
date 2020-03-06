@@ -4,6 +4,7 @@
 @section('content')
 <div class="list-wrapper container imgw100">
 	<h1>{{$post['h1'] ?? ''}}</h1>
+	<div class="filters-inline">{!! $post['filters'] ?? '' !!}</div>
 	@if ($post['type'] == 'program')
 		<div class="col-sm-12 flex line programs">
 			@forelse ($post['__list'] as $item)
@@ -50,7 +51,7 @@
 		</div>
 		</noindex>
 
-	@elseif ($post['type'] == 'service'):
+	@elseif ($post['type'] == 'service')
 		<div class="col-sm-12 flex extra-services ">
 		@forelse ($post['__list'] as $item)
 			<div class="col-sm-4 list-item center">
@@ -68,22 +69,40 @@
 		@endforelse
 		</div>
 	{!! $post['pagination'] !!}
+	@elseif ($post['type'] == 'review')
+		<section class="reviews list topoffset">
+			@forelse ($post['__list'] as $item)
+				<div class="item">
+					<div class="floatimg">
+						<img src="{{ theme_url() }}img/review.jpg" alt="Отзыв клиента {{ $item->meta->name }}" />
+					</div>
+					<p class="quote-big">
+						{{ $item->content }}
+					</p>
+					<div class="right fs22">{{ $item->meta->name }}</div>
+					<div class="clearfix"></div>
+				</div>
+			@empty
+				<p>Архивов нет!</p>
+			@endforelse
+		</section>
+		{!! $post['pagination'] !!}
 	@else
 		<div class="filters-inline">{{ $filters ?? '' }}</div>
 		<div class="col-sm-12 news">
 		@forelse ($post['__list'] as $item)
 			<div class="item clearfix">
 				<div class="ncontent" >
-						<img src="{{ postImgSrc($item, 'medium') }}" alt="{{ $item['title'] }}" style="height: 320px; width: 320px;object-fit: cover;" class="floatimg">
+						<img src="{{ postImgSrc($item, 'medium') }}" alt="{{ $item->title }}" style="height: 320px; width: 320px;object-fit: cover;" class="floatimg">
 					<div class="title" >
-						<a href="{{ $item['slug'] }}">
-							<span class="inline-title">{{ $item['short_title']?:$item['title'] }}</span>
+						<a href="{{ $item->slug }}">
+							<span class="inline-title">{{ $item->short_title ?: $item->title }}</span>
 						</a>
 					</div>
 					<span>
-						{{ funkids_clearTags(mb_substr($item['content'], 0 ,500)).'...' }}
+						{{ mb_substr($item->content, 0 ,500) . '...' }}
 					</span>
-					<div class="right"><a href="{{ $item['slug'] }}" class="button">Читать</a></div>
+					<div class="right"><a href="{{ $item->slug }}" class="button">Читать</a></div>
 				</div>
 			</div>
 		@empty

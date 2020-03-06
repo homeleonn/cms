@@ -96,11 +96,12 @@ class Post extends Model
 	private function getAll($query, $params, $array = false, $count = null)
 	{//dd(func_get_args());
 		if (!is_array($params) || $array) $params = [$params];
+		//d($query);
 		// dd(DB::select('Select * from posts limit 1'));
 		// $this->checkInLimit($query, $params, $count);
 		// $data = call_user_func_array(['DB', 'Select'], array_merge([$query . $this->limit], $params));
 		// dd(array_merge([$query], [$params]));
-		// dd([$query], $query, $params);
+		// dd([$query], $query, $params, array_merge([$query], $params));
 		return forward_static_call_array (['DB', 'Select'], array_merge([$query], [$params]));
 	}
 	
@@ -125,7 +126,7 @@ class Post extends Model
 			foreach($countCache as $c)
 				$count += $c->count;
 		}
-		return $this->getAll($query, [$termsTaxonomyIds], true, $count);
+		return $this->getAll($query, $termsTaxonomyIds, false, $count);
 	}
 	
 	public function getTheme()

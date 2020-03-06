@@ -69,3 +69,33 @@ function funkids_wrapper_classes($post){
 	
 	echo $classes;
 }
+
+addFilter('before_return_posts', 'funkids_before_return_posts');
+function funkids_before_return_posts($posts){
+	if (isset($posts[0]) && $posts[0]->post_type == 'review') {
+		foreach ($posts as &$p) {
+			$p = funkids_review_encode_meta($p);
+		}
+	}
+	
+	return $posts;
+}
+
+addFilter('before_return_post', 'before_return_post');
+function before_return_post($post){
+	if ($post->post_type == 'review') {
+		$post = funkids_review_encode_meta($post);
+	}
+	
+	return $post;
+}
+
+function funkids_review_encode_meta($post){
+	if (isset($post->meta)) {
+		$post->meta = json_decode($post->meta);
+	}
+	
+	return $post;
+}
+
+

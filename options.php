@@ -26,4 +26,7 @@ return [
 	'post_order_service' => 'a:2:{s:5:"value";s:31:"128,134,137,120,119,118,117,116";s:5:"order";s:8:"DISTINCT";}',
 
 	'post_order_program' => 'a:2:{s:5:"value";s:79:"143,144,145,124,130,136,135,133,131,129,127,126,125,122,121,108,107,106,105,100";s:5:"order";s:8:"DISTINCT";}',
+
+	'cache_enable' => '',
+
 ];
