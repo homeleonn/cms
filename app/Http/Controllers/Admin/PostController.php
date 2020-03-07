@@ -118,4 +118,9 @@ class PostController extends Controller
 	{
 		//
 	}
+	
+	public function actionIndex1()
+	{
+		return view(\Options::get('theme') . '/admin.index');
+	}
 }

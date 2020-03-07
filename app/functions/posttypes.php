@@ -66,7 +66,7 @@ addPageType('program', [
 		'h1' => 'Программы',
 		'hierarchical' => false,
 		'has_archive'  => 'programs',
-		'rewrite' => ['slug' => 'programs', 'with_front' => false, 'paged' => 20],
+		'rewrite' => ['slug' => 'programs', 'with_front' => false, 'paged' => 5],
 		// 'taxonomy' => [
 			// 'age' => [
 				// 'title' => 'Возрастная категория',

@@ -12,7 +12,6 @@
 */
 
 
-
 DB::connection()->enableQueryLog();
 
 require dirname(__DIR__) . '/app/functions/functions.php';
@@ -20,10 +19,14 @@ require dirname(__DIR__) . '/app/functions/functions.php';
 
 Route::get('/', 'PostController@actionIndex')->name('index');
 
-Route::group(['prefix' => 'admin', 'namespace' => 'Admin'], function(){
-	Route::resource('categories', 'CategoryController');
-	Route::resource('posts', 'PostController');
-});
+if (isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], '/admin/') === 0 || !isset($_SERVER['REQUEST_URI'])) {
+	Route::group(['prefix' => 'admin', 'namespace' => 'Admin'], function(){
+		// Route::resource('categories', 'CategoryController');
+		Route::resource('posts', 'PostController');
+		Route::get('/', 'PostController@actionIndex1');
+	});
+}
+
 
 Route::get('{slugMulti}', ['uses' => 'PostController@actionSingle'])->where('slugMulti', '[а-яА-ЯЁa-zA-Z0-9-\/]+');
 

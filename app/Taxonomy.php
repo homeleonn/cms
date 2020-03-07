@@ -20,35 +20,26 @@ class Taxonomy
 		return $cache[$where];
 	}
 	
-	public function getAllByPostTypes($postType)
-	{
-		if (!$this->postTypeTaxonomies) {
-			$this->postTypeTaxonomies = DB::select('Select DISTINCT t.*, tt.* from posts as p, terms as t, term_taxonomy as tt, term_relationships as tr where t.id = tt.term_id and tt.term_taxonomy_id = tr.term_taxonomy_id and p.id = tr.object_id and p.post_type = \''.$postType.'\'');
-		}
-		
-		return $this->postTypeTaxonomies;
-	}
-	
 	
 	/**
-	 *  @brief Brief description
+	 *  Save terms by given taxonomy
 	 *  
-	 *  @param [in] $terms Description for $terms
-	 *  @param [in] $by Description for $by
-	 *  @param [in] $value Description for $value
-	 *  @param [in] $onlyOne Description for $onlyOne
-	 *  @return Return description
+	 *  @param $terms list of terms
+	 *  @param $by term field which need find
+	 *  @param $taxonomy taxonomy name
+	 *  @param bool $onlyOne
 	 *  
-	 *  @details More details
+	 *  @return filtered terms by taxonomy
 	 */
-	public function filter(array $terms, string $by, string $value, $onlyOne = false)
+	public function filter(array $terms, string $by, string $taxonomy, $onlyOne = false)
 	{
 		$result = false;
 		foreach ($terms as $term) {
 			if (!isset($term->$by)) return $result;
-			if ($term->$by == $value) {
-				if($onlyOne)
+			if ($term->$by == $taxonomy) {
+				if ($onlyOne) {
 					return $term;
+				}
 				$result[] = $term;
 			}
 		}

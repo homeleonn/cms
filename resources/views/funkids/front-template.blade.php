@@ -2,11 +2,6 @@
 /**
  *  Template: front
  */
-
-//echo $content;
-//$cacheFileName = 'front/index';
-//if(Common::getCache($cacheFileName, -1)) return;
-
 ?>
 @extends('layout')
 
@@ -19,12 +14,12 @@
 			<span class="upper"><div class="first-word">FunKids</div></span>
 		</div>
 	</div>
-	<?=funKids_all();?>
+	{!! funKids_getBlock('programs') !!}
 <?php
 //funKids_popular();
 ?>
 </div>
-<?php funKids_services()?>
+{!! funKids_getBlock('services') !!}
 <div class="s-about" id="s-about">
 	<div class="girl-left sprite"></div>
 	<h2 class="section-title">О нас</h2>
@@ -80,9 +75,6 @@
 		<input type="button" class="button1" id="q-set" value="Отправить">
 	</div>
 </div>
-<?php
-//funkids_readyToHolyday();
-//funkids_getLastReviews();
-?>
+{!! funKids_getBlock('reviews') !!}
 </noindex>
 @endsection

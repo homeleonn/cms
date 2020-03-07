@@ -26,8 +26,12 @@ function requestUri(){
 	return $_SERVER['REQUEST_URI'];
 }
 
+function cache_dir(){
+	return uploads_path() . '/cache/front/';
+}
+
 function cache_path(){
-	return uploads_path() . '/cache/front/' . md5(requestUri()) . '.html';
+	return cache_dir() . md5(requestUri()) . '.html';
 }
 
 function setCache($data){
@@ -43,6 +47,47 @@ function getCache(){
 	return false;
 }
 
+class _Cache
+{
+	public static function getCache($cacheFileName, $delay = 86400, $outNow = true){
+		if (!Options::get('cache_enable')) return false;
+		$cacheFileName = cache_dir() . $cacheFileName . '.html';
+		
+		if (file_exists($cacheFileName))
+		{
+			if ($delay == -1 || (filemtime($cacheFileName) > time() - $delay)) {
+				if (($data = file_get_contents($cacheFileName)) === FALSE) return false;
+				
+				if ($data != '') {
+					if ($outNow) {
+						echo $data;
+					} else {
+						return $data;
+					}   
+					return true;
+				}
+			}
+		}
+		ob_start();
+		return false;
+	}
+
+	public static function setCache($cacheFileName, $data = false){
+		// if (!$data) $data = ob_get_clean();
+		// if (!Options::get('cache_enable')) return $data;
+		if (!Options::get('cache_enable')) return false;
+		$data = ob_get_clean();
+		$cacheFileName = cache_dir() . $cacheFileName . '.html';
+		
+		if (!is_dir($dir = dirname($cacheFileName))) {
+			mkdir($dir, 0755, true);
+		}
+		
+		file_put_contents($cacheFileName, $data, LOCK_EX);
+		return $data;
+	}
+}
+
 
 if (!function_exists('array_key_first')) {
     function array_key_first(array $arr) {
@@ -55,10 +100,6 @@ if (!function_exists('array_key_first')) {
 
 
 
-
-function getRawOptions(){
-	// return
-}
 
 function isMain(){
 	return url('/') == url()->current();
@@ -95,74 +136,6 @@ function plugins(array $activePlugins = []):array
 	return $plugins;
 }
 
-// function addPageType(string $type, array $options){
-	// PostsTypes::set($type, $options);
-	// $sep = '/';
-	// $paged = $options['rewrite']['paged'] ? "{$sep}page/{page}" : '';
-	
-	// if ($options['has_archive'])
-		// Route::get($options['has_archive'] . '/{slug}', ['uses' => 'PostController@actionSingle', 'type' => $type, 'args' => ['slug']]);
-	
-	// if ($options['has_archive']) {
-		// Route::get($options['has_archive'] . $paged, ['uses' => 'PostController@actionList', 'type' => $type, 'args' => ['page']]);
-		// Route::get($options['has_archive'], ['uses' => 'PostController@actionList', 'type' => $type]);
-	// }
-	
-	// if (!empty($options['taxonomy'])) {
-		// if ($options['has_archive'] === false) $sep = '';
-		// foreach ($options['taxonomy'] as $t => $values) {
-			// Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}", ['uses' => 'PostController@actionList', 'type' => $type, 'taxonomy' => $t, 'args' => ['tslug']]);
-			// Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}{$paged}", ['uses' => 'PostController@actionList', 'type' => $type, 'taxonomy' => $t, 'args' => ['tslug', 'page']]);
-		// }
-	// }
-// }
-
-// function addPageType(string $type, array $options){
-	// PostsTypes::set($type, $options);
-	// $sep = '/';
-	// $paged = $options['rewrite']['paged'] ? "{$sep}page/{page}" : '';
-	
-	// if ($options['has_archive'])
-		// Route::get($options['has_archive'] . '/{slug}', ['uses' => 'PostController@actionSingle', 'type' => $type, 'args' => ['slug']]);
-	
-	// if ($options['has_archive']) {
-		// Route::get($options['has_archive'] . $paged, ['uses' => 'PostController@actionList', 'type' => $type, 'args' => ['page']]);
-		// Route::get($options['has_archive'], ['uses' => 'PostController@actionList', 'type' => $type]);
-	// }
-	
-	// if (!empty($options['taxonomy'])) {
-		// if ($options['has_archive'] === false) $sep = '';
-		// foreach ($options['taxonomy'] as $t => $values) {
-			// Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}", ['uses' => 'PostController@actionList', 'type' => $type, 'taxonomy' => $t, 'args' => ['tslug']]);
-			// Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}{$paged}", ['uses' => 'PostController@actionList', 'type' => $type, 'taxonomy' => $t, 'args' => ['tslug', 'page']]);
-		// }
-	// }
-// }
-
-// function addPageType(string $type, array $options){
-	// PostsTypes::set($type, $options);
-	// $sep = '/';
-	// $paged = $options['rewrite']['paged'] ? "{$sep}page/{page}" : '';
-	
-	// if ($options['has_archive']) {
-		// Route::get($options['has_archive'] . '/{slug}', ['uses' => 'PostController@actionSingle__' . $type]);
-	// }
-	
-	// if ($options['has_archive']) {
-		// Route::get($options['has_archive'] . $paged, ['uses' => 'PostController@actionList__' . $type]);
-		// Route::get($options['has_archive'], ['uses' => 'PostController@actionList__' . $type]);
-	// }
-	
-	// if (!empty($options['taxonomy'])) {
-		// if ($options['has_archive'] === false) $sep = '';
-		// foreach ($options['taxonomy'] as $t => $values) {
-			// Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}", ['uses' => "PostController@actionList__{$type}00{$t}"]);
-			// Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}{$paged}", ['uses' => "PostController@actionList__{$type}00{$t}"]);
-		// }
-	// }
-// }
-
-
 
 function addPageType(string $type, array $options){
 	PostsTypes::set($type, $options);
@@ -189,10 +162,10 @@ function addPageType(string $type, array $options){
 		if ($options['has_archive'] === false) $sep = '';
 		foreach ($options['taxonomy'] as $t => $values) {
 			Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}", function($tslug) use ($type, $pc, $t){
-				return App::make($pc)->run($type, 'actionList', [1, $tslug, $t]);
+				return App::make($pc)->run($type, 'actionList', [1, $t, $tslug]);
 			});
 			Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}{$paged}", function($tslug, $page) use ($type, $pc, $t){
-				return App::make($pc)->run($type, 'actionList', [$page, $tslug, $t]);
+				return App::make($pc)->run($type, 'actionList', [$page, $t, $tslug]);
 			});
 		}
 	}
@@ -207,14 +180,6 @@ function uploads_path(){
 }
 
 function add($type, $funcName, $userFunc, $front = false){
-	// if(is_array($userFunc)){
-		// if(isset($userFunc[0]) && isset($userFunc[1])){
-			// if(is_object($userFunc[0]) && method_exists($userFunc[0], $userFunc[1])){
-				// $userFunc[0]->{$userFunc[1]}();
-			// }
-		// }
-		// dd($userFunc);
-	// }
 	if($front){
 		if(!isset($GLOBALS['jump_'.$type][$funcName]))
 			$GLOBALS['jump_'.$type][$funcName] = [];
@@ -286,7 +251,6 @@ function urlWithoutParams(){
 function viewWrap($templateFileName, $post, $args = null){
 	if (isset($post['_jmp_post_template']) && $post['_jmp_post_template']) {
 		$templateFileName = $post['_jmp_post_template'];
-		// $templateFileName = strpos($post['_jmp_post_template'], '.php') === false ? $post['_jmp_post_template'] : substr($post['_jmp_post_template'], 0, -4);
 	}
 	
 	return view(Options::get('theme') . '.' . $templateFileName, $args ?? []);

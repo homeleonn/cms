@@ -131,7 +131,7 @@ class PostController extends Controller
 					$i = 0;
 					$addBreadCrumbs = [];
 					
-					foreach ($parents as $parent) {//d($parent->id);
+					foreach ($parents as $parent) {
 						if ($parent->id != $tempParent || $parent->slug != $h[$i]) {
 							abort(404);
 						}
@@ -211,16 +211,15 @@ class PostController extends Controller
 		return $post;
 	}
 	
-	public function actionList($page = 1, $tslug = null, $taxonomy = null, $limit = null)
+	public function actionList($page = 1, $taxonomy = null, $tslug = null, $limit = null)
 	{
+		$this->model->setOffset($page, $limit ?? $this->postOptions['rewrite']['paged'] ?? null);
 		$hierarchy = explode('/', $tslug);
 		$result = $taxonomy ? $this->getPostsWithTaxonomy($taxonomy, $hierarchy)
 							: $this->getPostsWithoutTaxonomy();
 		
 		[$list, $termsFromExistsPost, $termsByPostsIds, $allTerms] = $result;
-		if (!$list) {
-			abort(404);
-		}
+		if (!$list) abort(404);
 		unset($result);
 		
 		$this->setPermalinkAndTerms($list, $termsByPostsIds, $termsFromExistsPost);
@@ -234,7 +233,7 @@ class PostController extends Controller
 		
 		$this->post['__list'] 		= $list;
 		unset($list);
-		// dd($this->post);
+		
 		return viewWrap($this->getTemplate('list'), $this->post, ['post' => $this->post]);
     }
 	
@@ -303,7 +302,7 @@ class PostController extends Controller
 	
 	private function pagination($page)
 	{
-		return (new Pagination())->run(url()->current(), $page, /*$this->model->getAllItemsCount()*/ 10, /*$this->postOptions['rewrite']['paged']*/ 3);
+		return (new Pagination())->run(url()->current(), $page, $this->model->getAllItemsCount(), $this->postOptions['rewrite']['paged']);
 	}
 	
 	
@@ -315,7 +314,6 @@ class PostController extends Controller
 			$this->postPermalink($post, $termsOnId, $termsOnParent, $termsByPostsIds[$post->id] ?? false);
 			if ($termsByPostsIds[$post->id])
 				$post->terms = Arr::termsHTML($this->postTermsLink($termsOnId, $termsOnParent, $termsByPostsIds[$post->id]), $this->postOptions['has_archive']);
-			// $post->terms = $termsByPostsIds[$post->id];
 		}
 	}
 	
@@ -334,13 +332,12 @@ class PostController extends Controller
 	
 	private function getPostsWithTaxonomy($taxonomy, $hierarchy)
 	{
-		$allTerms = $this->model->taxonomy->getByTaxonomies();
-		$termsFromExistsPost = $this->model->taxonomy->filter($allTerms, 'taxonomy', $taxonomy);
+		$allTerms 				= $this->model->taxonomy->getByTaxonomies();
+		$termsFromExistsPost 	= $this->model->taxonomy->filter($allTerms, 'taxonomy', $taxonomy);
+		$lastChild 				= $hierarchy[count($hierarchy) - 1];
+		$findTerm 				= false;
 		
-		$lastChild = $hierarchy[count($hierarchy) - 1];
-		$findTerm = false;
 		// get current selected term to know whence build hierarchy
-		
 		foreach($allTerms as $term){
 			if($term->slug == $lastChild){
 				$currentTerm = $term;
@@ -349,21 +346,19 @@ class PostController extends Controller
 			}
 		}
 		
-		if(!$findTerm) {
-			exit('404: term not found');
-		}
+		if(!$findTerm) abort(404);
 		
-		list($termsOnIds, $termsOnParents) = Arr::itemsOnKeys($allTerms, ['id', 'parent']);
+		[$termsOnIds, $termsOnParents] = Arr::itemsOnKeys($allTerms, ['id', 'parent']);
 		$builtedTermsParentHierarchy = substr(str_replace('|', '/', Arr::builtHierarchyDown($termsOnIds, $currentTerm, 'slug') . '|' .$lastChild), 1);
 		
 		
 		if (implode('/', $hierarchy) != $builtedTermsParentHierarchy) {
-			exit('location: ' . $builtedTermsParentHierarchy);
+			redir($builtedTermsParentHierarchy);
 		}
 		
-		$toShow = $termsOnParents[$currentTerm->id] ?? NULL;
-		$i = 0;
+		$toShow 			= $termsOnParents[$currentTerm->id] ?? NULL;
 		$termsTaxonomyIds[] = $currentTerm->term_taxonomy_id;
+		$i 					= 0;
 		
 		while (isset($toShow[$i])) {
 			$termsTaxonomyIds[] = $toShow[$i]->term_taxonomy_id;
@@ -373,9 +368,9 @@ class PostController extends Controller
 			$i++;
 		}
 		
-		$posts = $this->model->getPostsBysTermsTaxonomyIds($termsTaxonomyIds);
-		$allTerms = $this->model->taxonomy->getAllByObjectsIds(array_keys(Arr::itemsOnKeys($posts, ['id'])));
-		$termsByPostsIds = Arr::itemsOnKeys($allTerms, ['object_id']);
+		$posts 				= $this->model->getPostsBysTermsTaxonomyIds($termsTaxonomyIds);
+		$allTerms 			= $this->model->taxonomy->getAllByObjectsIds(array_keys(Arr::itemsOnKeys($posts, ['id'])));
+		$termsByPostsIds 	= Arr::itemsOnKeys($allTerms, ['object_id']);
 		
 		return [$posts, $termsFromExistsPost, $termsByPostsIds, $allTerms];
 	}
@@ -423,14 +418,12 @@ class PostController extends Controller
 	
 	private function createBreadCrumbsForList(&$post, $taxonomy, $hierarchy, $termsByPostsIds, $tslug = '')
 	{
-		// dd(func_get_args());
 		// Узнаем имя таксономии по метке для хлебных крошек
 		$taxonomyName = [];
-		// dd($termsByPostsIds);
 		if ($termsByPostsIds)
 		{
 			foreach ($hierarchy as $section) {
-				foreach ($termsByPostsIds as $term) {//dd($termsByPostsIds, $term, $section);
+				foreach ($termsByPostsIds as $term) {
 					if (!isset($term->slug)) $term = $term[0];
 					if ($term && $term->slug == $section) {
 						$taxonomyName[] = $term->name;
@@ -472,7 +465,6 @@ class PostController extends Controller
 				$post['title'] .= ' - ' . $this->postOptions['title'];
 			}	
 		}
-		//dd($breadcrumbs, array_merge($breadcrumbs, $post['breadcrumbs'] ?? []));
 		$post['breadcrumbs'] = $this->getBreadcrumbsHtml(array_merge($breadcrumbs, $post['breadcrumbs'] ?? []));
 	}
 	
@@ -488,7 +480,6 @@ class PostController extends Controller
 			$this->addBreadCrumbsHelper($taxonomyTitle, $value, $taxonomyTitle, $post['short_title']);
 		}elseif(isset($post['id']) && $this->config->front_page != $post['id']){
 			$this->config->addBreadCrumbs($post['url'], $post['short_title']);
-			//if(isset($this->options['rewrite']['slug']))
 			if($this->options['title']){
 				$post['h1'] = $post['title'];
 				$post['title'] .= ' - ' . $this->options['title'];
@@ -500,17 +491,9 @@ class PostController extends Controller
 	
 	private function addBreadCrumbsHelper(&$post, $taxonomyTitle, $taxonomyName)
 	{
-		//dd($taxonomyTitle, $value, $text);
 		$a = $post['breadcrumbs'] ?? [];
-		// $post['breadcrumbs'][$taxonomyTitle] = $text . ': ' . $value;
-		// dd($taxonomyTitle, $text . ': ' . $value);
-		// $a[$taxonomyTitle] = $text . ': ' . $value;
-		// $post['breadcrumbs'] = $a;
-		// $post['breadcrumbs'] = $taxonomyTitle . ': ' . $value . ' | ' . $post['short_title'];
 		$a[] = ($taxonomyTitle ? $taxonomyTitle . ': ' : '') . $taxonomyName . (isset($post['has_archive']) ? '' : ' > ' . $post['short_title']);
-		//dd($a);
 		$post['breadcrumbs'] = $a;
-		// dd($post);
 	}
 	
 	
@@ -520,8 +503,7 @@ class PostController extends Controller
 		$bcCount 	= count($bc);
 		$i 			= 0;
 		$html 		= '<div id="breadcrumbs">';
-		// dd($bc);
-		foreach ($bc as $url => $name) {//d($url, !!$url);
+		foreach ($bc as $url => $name) {
 			$html .= (++$i == $bcCount ? $name : "<a href=\"{$url}\">{$name}</a> > ");
 		}
 		

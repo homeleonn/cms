@@ -4,14 +4,14 @@
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>{{$title ?? ''}} | Панель администратора</title>
-	<link rel="stylesheet" type="text/css" href="/admin/css/bootstrap.css">
-	<link rel="stylesheet" type="text/css" href="/admin/css/fontello.css">
-	<link rel="stylesheet" type="text/css" href="/admin/css/style.css">
-	<link rel="stylesheet" type="text/css" href="/admin/css/style1.css">
+	<link rel="stylesheet" type="text/css" href="/admin_static/css/bootstrap.css">
+	<link rel="stylesheet" type="text/css" href="/admin_static/css/fontello.css">
+	<link rel="stylesheet" type="text/css" href="/admin_static/css/style.css">
+	<link rel="stylesheet" type="text/css" href="/admin_static/css/style1.css">
 	<!--<link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Open+Sans:400italic,600italic,700italic,400,800,700,600"/>-->
-	<link rel="shortcut icon" type="image/x-icon" href="/admin/img/favicon.ico"/>
-	<script src="/admin/js/jq3.js"></script>
-	<script src="/admin/js/admin.js"></script>
+	<link rel="shortcut icon" type="image/x-icon" href="/admin_static/img/favicon.ico"/>
+	<script src="/admin_static/js/jq3.js"></script>
+	<script src="/admin_static/js/admin.js"></script>
 </head>
 <body>
 <div id="wrapper">
@@ -25,7 +25,7 @@
 		</div>
 		<div>
 			<div id="icon-menu" class="icon-menu" title="Свернуть/Развернуть меню"></div>
-			<div id="logo"><img src="/admin/img/jump.png"></div>
+			<div id="logo"><img src="/admin_static/img/jump.png"></div>
 		</div>
 	</header>
 	<?php //include 'dashboard.php'; ?>
@@ -37,11 +37,11 @@
 	</footer>
 </div>
 <?php //ju_footer();?>
-<script src="/admin/js/common.js"></script>
-<script src="/admin/js/upload.js"></script>
-<script src="/admin/js/add.js"></script>
-<script src="/admin/js/translit.js"></script>
-<script src="/admin/js/comments.js"></script>
+<script src="/admin_static/js/common.js"></script>
+<script src="/admin_static/js/upload.js"></script>
+<script src="/admin_static/js/add.js"></script>
+<script src="/admin_static/js/translit.js"></script>
+<script src="/admin_static/js/comments.js"></script>
 <script src="/components/js/tinymce/jquery.tinymce.min.js"></script>
 <script src="/components/js/tinymce/tinymce.min.js"></script>
 <script>
