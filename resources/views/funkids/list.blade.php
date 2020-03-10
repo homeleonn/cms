@@ -79,7 +79,7 @@
 					<p class="quote-big">
 						{{ $item->content }}
 					</p>
-					<div class="right fs22">{{ $item->meta->name }}</div>
+					<div class="right fs22"><a href="{{ $item->slug }}">{{ $item->meta->name }}</a></div>
 					<div class="clearfix"></div>
 				</div>
 			@empty

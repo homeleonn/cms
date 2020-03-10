@@ -1,6 +1,5 @@
 <?php
 
-use App\Helpers\PostsTypes;
 use App\Helpers\Arr;
 
 require 'posttypes.php';
@@ -20,6 +19,10 @@ function d(){
 
 function ddd(){
 	vd(true, func_get_args());
+}
+
+function isAdminSide(){
+	return isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], '/admin/') === 0;
 }
 
 function requestUri(){
@@ -137,39 +140,7 @@ function plugins(array $activePlugins = []):array
 }
 
 
-function addPageType(string $type, array $options){
-	PostsTypes::set($type, $options);
-	$pc = 'App\Http\Controllers\PostController';
-	$sep = '/';
-	$paged = $options['rewrite']['paged'] ? "{$sep}page/{page}" : '';
-	
-	if ($options['has_archive']) {
-		Route::get($options['has_archive'] . '/{slug}', function($slug) use ($type, $pc){
-			return App::make($pc)->run($type, 'actionSingle', [$slug]);
-		});
-	}
-	
-	if ($options['has_archive']) {
-		Route::get($options['has_archive'] . $paged, function($page) use ($type, $pc){
-			return App::make($pc)->run($type, 'actionList', [$page]);
-		});
-		Route::get($options['has_archive'], function() use ($type, $pc){
-			return App::make($pc)->run($type, 'actionList', [1]);
-		});
-	}
-	
-	if (!empty($options['taxonomy'])) {
-		if ($options['has_archive'] === false) $sep = '';
-		foreach ($options['taxonomy'] as $t => $values) {
-			Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}", function($tslug) use ($type, $pc, $t){
-				return App::make($pc)->run($type, 'actionList', [1, $t, $tslug]);
-			});
-			Route::get("{$options['has_archive']}{$sep}{$t}/{tslug}{$paged}", function($tslug, $page) use ($type, $pc, $t){
-				return App::make($pc)->run($type, 'actionList', [$page, $t, $tslug]);
-			});
-		}
-	}
-}
+
 
 function uploads_url(){
 	return url('/') . '/uploads/';
@@ -244,6 +215,11 @@ function theme_url(){
 	return url('/') . '/themes/' . Options::get('theme') . '/';
 }
 
+function themeDir(){
+	return resource_path('views/') . Options::get('theme') . '/';
+}
+
+
 function urlWithoutParams(){
 	return url('/') . explode('?', $_SERVER['REQUEST_URI'])[0];
 }
@@ -257,16 +233,37 @@ function viewWrap($templateFileName, $post, $args = null){
 }
 
 function redir($url = NULL, $code = 301){
-		$codes = [
-			301 => 'Moved Permanently',
-		];
-			
-		header("HTTP/1.1 {$code} {$codes[$code]}");
-		header('Location:' . $url);
-		exit;
-	}
+	$codes = [
+		301 => 'Moved Permanently',
+	];
+		
+	header("HTTP/1.1 {$code} {$codes[$code]}");
+	header('Location:' . $url);
+	exit;
+}
 
 
+function funkids_readyToHolyday(){
+?>
+<div class="holyday" id="holyday">
+	<h2 class="section-title">Готовимся к празднику уже сейчас</h2>
+	<div id="order-question">
+		Напишите нам и наш менеджер ответит на все Ваши вопросы
+		<div class="inp1">
+			<input type="text" id="qname" name="name" placeholder="Имя*">
+			<input type="text" id="qtel" name="tel" placeholder="Телефон*">
+			<input type="text" id="qmail" name="email" placeholder="Электронная почта">
+		</div>
+		<div class="captcha-wrapper none center">
+			<img alt="captcha" class="captcha pointer captcha-reload">
+			<span class="icon-arrows-cw captcha-reload" title="Обновить капчу"></span><br>Введите символы с картинки 
+			<input type="text" class="captcha-code">
+		</div>
+		<input type="button" class="button1" id="q-set" value="Отправить">
+	</div>
+</div>
+<?php
+}
 
 addFilter('postTypeLink', 'myPostTypeLink');
 function myPostTypeLink($link, $termsOnId, $termsOnParent, $postTerms){//dd(func_get_args());

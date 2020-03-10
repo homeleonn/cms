@@ -23,8 +23,7 @@ class PostController extends Controller
 		$this->model = new Post;
 		$this->model->taxonomy = new Taxonomy();
 		PostsTypes::setCurrentType($type);
-		$this->postOptions = $this->post = PostsTypes::getCurrent();
-		$this->model->postOptions = $this->postOptions;
+		$this->postOptions = $this->post = $this->model->postOptions = PostsTypes::getCurrent();
 		$this->breadcrumbs = [];
 		
 		if ($method) {		

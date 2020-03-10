@@ -5,7 +5,7 @@
 	
 	@include('admin.layouts.errors')
 	
-	{{ Form::open(['route' => ['posts.update', $post->id], 'method' => 'put']) }}
+	{{ Form::open(['route' => ['post.update', $post->id], 'method' => 'put']) }}
 		<input type="text" name="title" placeholder="name" value="{{ $post->title }}"><br>
 		<input type="text" name="slug" placeholder="slug" value="{{ $post->slug }}"><br>
 		<input type="text" name="short_title" placeholder="short_title" value="{{ $post->short_title }}"><br>

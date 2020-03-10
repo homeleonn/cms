@@ -27,6 +27,7 @@ class RouteServiceProvider extends ServiceProvider
 		Route::pattern('slug', '[а-яА-ЯЁa-zA-Z0-9-]+');
 		Route::pattern('slugMulti', '[а-яА-ЯЁa-zA-Z0-9-\/]+');
 		Route::pattern('page', '[2-9]|\d{2,}');
+		Route::pattern('orderType', 'ASC|DESC|DISTINCT');
         parent::boot();
     }
 

@@ -58,23 +58,7 @@
 	</div>
 </div>
 <noindex>
-<div class="holyday" id="holyday">
-	<h2 class="section-title">Готовимся к празднику уже сейчас</h2>
-	<div id="order-question">
-		Напишите нам и наш менеджер ответит на все Ваши вопросы
-		<div class="inp1">
-			<input type="text" id="qname" name="name" placeholder="Имя*">
-			<input type="text" id="qtel" name="tel" placeholder="Телефон*">
-			<input type="text" id="qmail" name="email" placeholder="Электронная почта">
-		</div>
-		<div class="captcha-wrapper none center">
-			<img alt="captcha" class="captcha pointer captcha-reload">
-			<span class="icon-arrows-cw captcha-reload" title="Обновить капчу"></span><br>Введите символы с картинки 
-			<input type="text" class="captcha-code">
-		</div>
-		<input type="button" class="button1" id="q-set" value="Отправить">
-	</div>
-</div>
+{!! funkids_readyToHolyday() !!}
 {!! funKids_getBlock('reviews') !!}
 </noindex>
 @endsection

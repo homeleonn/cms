@@ -19,11 +19,14 @@ require dirname(__DIR__) . '/app/functions/functions.php';
 
 Route::get('/', 'PostController@actionIndex')->name('index');
 
-if (isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], '/admin/') === 0 || !isset($_SERVER['REQUEST_URI'])) {
+if (isAdminSide() || !isset($_SERVER['REQUEST_URI'])) {
 	Route::group(['prefix' => 'admin', 'namespace' => 'Admin'], function(){
 		// Route::resource('categories', 'CategoryController');
-		Route::resource('posts', 'PostController');
+		// Route::resource('post', 'PostController');
 		Route::get('/', 'PostController@actionIndex1');
+		
+		Route::get('changeOrder/{orderType}', 'PostController@actionChangeOrder')->name("changeOrder");
+		Route::post('changeOrderValue', 'PostController@actionChangeOrderValue')->name("changeOrderValue");
 	});
 }
 

@@ -26,5 +26,6 @@ class AppServiceProvider extends ServiceProvider
 		$this->app->singleton('Options', function ($app) {
 			return new \App\Helpers\Options(base_path() . '/options.php');
 		});
+		$this->app['view']->getFinder()->prependLocation(resource_path('views/') . \Options::get('theme') . '/');
     }
 }

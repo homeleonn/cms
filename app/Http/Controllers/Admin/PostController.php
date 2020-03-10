@@ -5,44 +5,39 @@ namespace App\Http\Controllers\Admin;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
-use App\Post;
 use Validator;
 use Illuminate\Validation\Rule;
 use App\Traits\Helper;
+use App\Helpers\{PostsTypes, Arr, Pagination};
+use App\Admin\Post;
 
 class PostController extends Controller
 {
 	use Helper;
 	
 	private $routeIndex = 'posts.index';
-	/**
-	 * Display a listing of the resource.
-	 *
-	 * @return \Illuminate\Http\Response
-	 */
-	public function index()
+	
+	public function __construct(Request $request)
 	{
-		$posts = Post::all();
+		PostsTypes::setCurrentType(explode('.', $request->route()->getAction()['as'])[0]);
+		$this->model = new Post;
+		$this->postOptions = $this->model->postOptions = PostsTypes::getCurrent();
+	}
+	
+	public function actionIndex()
+	{
+		$posts = $this->model->list();
 		return view('admin.posts.index', compact('posts'));
 	}
 
-	/**
-	 * Show the form for creating a new resource.
-	 *
-	 * @return \Illuminate\Http\Response
-	 */
-	public function create()
+	
+	public function actionCreate()
 	{
 		return view('admin.posts.create');
 	}
 
-	/**
-	 * Store a newly created resource in storage.
-	 *
-	 * @param  \Illuminate\Http\Request  $request
-	 * @return \Illuminate\Http\Response
-	 */
-	public function store(Request $request)
+	
+	public function actionStore(Request $request)
 	{
 		dump($request->all());
 		// $post_type = 'page';
@@ -57,40 +52,24 @@ class PostController extends Controller
 
 		Post::create($request->all());
 
-		return $this->i();
+		return $this->goHome();
 	}
 
-	/**
-	 * Display the specified resource.
-	 *
-	 * @param  int  $id
-	 * @return \Illuminate\Http\Response
-	 */
-	public function show($id)
+	
+	public function actionShow($id)
 	{
 		//
 	}
 
-	/**
-	 * Show the form for editing the specified resource.
-	 *
-	 * @param  int  $id
-	 * @return \Illuminate\Http\Response
-	 */
-	public function edit($id)
+	
+	public function actionEdit($id)
 	{
 		$post = Post::find($id);
 		return view('admin.posts.edit', compact('post'));
 	}
 
-	/**
-	 * Update the specified resource in storage.
-	 *
-	 * @param  \Illuminate\Http\Request  $request
-	 * @param  int  $id
-	 * @return \Illuminate\Http\Response
-	 */
-	public function update(Request $request, $id)
+	
+	public function actionUpdate(Request $request, $id)
 	{
 		$post = Post::find($id);
 		// dump($request->all());
@@ -105,22 +84,22 @@ class PostController extends Controller
 
 		$post->fill($request->all())->save();
 		
-		return $this->i();
+		return $this->goHome();
 	}
 
-	/**
-	 * Remove the specified resource from storage.
-	 *
-	 * @param  int  $id
-	 * @return \Illuminate\Http\Response
-	 */
-	public function destroy($id)
+	
+	public function actionDestroy($id)
 	{
 		//
 	}
 	
 	public function actionIndex1()
 	{
-		return view(\Options::get('theme') . '/admin.index');
+		return view(\Options::get('theme') . '.admin.index');
+	}
+	
+	private function goHome()
+	{
+		return redirect()->route($this->postOptions['type'] . '.index');
 	}
 }
