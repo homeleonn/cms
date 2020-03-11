@@ -14,6 +14,7 @@ class PostsTypes
 	public static function setCurrentType(string $type): void
 	{
 		self::$currentType = $type;
+		\View::share('postOptions', self::getCurrent());
 	}
 	
 	public static function set($key, $value)

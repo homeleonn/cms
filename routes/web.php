@@ -14,8 +14,7 @@
 
 DB::connection()->enableQueryLog();
 
-require dirname(__DIR__) . '/app/functions/functions.php';
-
+require dirname(__DIR__) . '/app/functions/posttypes.php';
 
 Route::get('/', 'PostController@actionIndex')->name('index');
 
@@ -23,7 +22,7 @@ if (isAdminSide() || !isset($_SERVER['REQUEST_URI'])) {
 	Route::group(['prefix' => 'admin', 'namespace' => 'Admin'], function(){
 		// Route::resource('categories', 'CategoryController');
 		// Route::resource('post', 'PostController');
-		Route::get('/', 'PostController@actionIndex1');
+		Route::get('/', 'PostController@actionDashboard');
 		
 		Route::get('changeOrder/{orderType}', 'PostController@actionChangeOrder')->name("changeOrder");
 		Route::post('changeOrderValue', 'PostController@actionChangeOrderValue')->name("changeOrderValue");

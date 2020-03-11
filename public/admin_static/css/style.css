@@ -55,6 +55,10 @@
 	cursor: pointer;
 }
 
+.adminside{
+	margin-left: 255px;
+}
+
 .wrapper{
 	background: #f8f8f8;
 	border: 1px #e7e7e7 solid;
@@ -366,10 +370,21 @@ ul.my1{
 
 table.mytable{
 	width: 100%;
+	margin: 2px;
+}
+
+
+table.mytable tr:first-child td {
+	border: 0;
+	border-right: 1px #e0e0e0 solid;
+}
+
+table.mytable tr:first-child td:last-child  {
+	border-right: 0;
 }
 
 table.mytable td{
-	padding: 5px;
+	/* padding: 5px; */
 	border: 1px #e0e0e0 solid;
 	text-align: center;
 }
@@ -394,7 +409,7 @@ table.mytable tr:first-child{
 /*input your css: begin*/
 
 header{
-	height: 35px;
+	/* height: 35px; */
 	background: lightgreen;
 }
 
@@ -503,7 +518,7 @@ header #icon-menu{
 
 div#content{
 	margin-left: 250px;
-	padding: 10px;
+	padding: 5px;
 }
 
 

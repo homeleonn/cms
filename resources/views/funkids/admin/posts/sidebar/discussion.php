@@ -1,10 +1,10 @@
 <?php
 $commentsChecked = '';
-if(!isset($data['comment_status'])){
-	if(!$options['hierarchical'])
-		$commentsChecked = 'checked';
+if(!isset($post['comment_status'])){
+	if(!$postOptions['hierarchical'])
+		$commentsChecked = '';
 }else{
-	if($data['comment_status'] == 'open')
+	if($post['comment_status'] == 'open')
 		$commentsChecked = 'checked';
 }
 ?>

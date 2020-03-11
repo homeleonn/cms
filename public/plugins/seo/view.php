@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="<?=PLUGINS?>seo/style.css">
+<link rel="stylesheet" href="/plugins/seo/style.css">
 <div id="post-seo" class="side-block">
 	<div class="block-title">SEO</div>
 	<div class="block-content">

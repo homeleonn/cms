@@ -3,7 +3,7 @@
  *  Template: price
  */
 ?>
-@extends('funkids.layout')
+@extends('layout')
 @section('content')
 <h1 class="section-title">Цены</h1>
 

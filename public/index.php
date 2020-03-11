@@ -65,9 +65,13 @@ $response = $kernel->handle(
 $response->send();
 
 $kernel->terminate($request, $response);
-d(microtime(true) - LARAVEL_START);
-if ($t = DB::getQueryLog()) 
+if (isAdminSide()) {
+	echo '<div style="margin-left: 255px;">';
+}
+dump(microtime(true) - LARAVEL_START);
+if ($t = DB::getQueryLog()) {
 	dump($t);
+}
 	// dd(array_map(function($tt){
 		// if (isset($tt[0])) {
 			// foreach ($tt as $key => $t) {

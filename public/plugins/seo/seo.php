@@ -12,8 +12,7 @@
 
 addAction('add_post_after', 'seo');
 addAction('edit_post_after', 'seo');
-function seo(){
-	global $post;
+function seo($post){
 	$title = $post['_seo_title'] ?? '';
 	$descr = $post['_seo_description'] ?? '';
 	$keys  = $post['_seo_keywords'] ?? '';
@@ -40,8 +39,7 @@ addFilter('jhead', function($post){
 });
 
 
-addAction('jhead', function(){
-	global $post, $di;
+addAction('jhead', function($post){
 	//dd($post);
 	
 	if(isset($post['__list'])){
@@ -51,7 +49,7 @@ addAction('jhead', function(){
 	$meta = ['_seo_description' => 'description', '_seo_keywords' => 'keywords'];
 	
 	if(!isset($post['_seo_description'])){
-		$post['_seo_description'] = $di->get('config')->getOption('description');
+		$post['_seo_description'] = \Options::get('description');
 	}
 	
 	foreach($meta as $k => $m){

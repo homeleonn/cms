@@ -9,13 +9,13 @@
 	<link rel="stylesheet" href="<?=theme_url()?>css/bootstrap.min.css">
 	<link rel="stylesheet" href="<?=theme_url()?>css/fontello.css">
 	<link rel="stylesheet" href="<?=theme_url()?>css/style.css">
-	<link rel="shortcut icon" href="<?=\url('/')?>/favicon.ico" type="image/x-icon">
-	<script>let root = "<?=\url('/')?>", theme = "<?=theme_url()?>";function $$(callback){window.addEventListener('load', callback);}</script>
+	<link rel="shortcut icon" href="<?=url('/')?>/favicon.ico" type="image/x-icon">
+	<script>let root = '/', theme = "<?=theme_url()?>";function $$(callback){window.addEventListener('load', callback);}</script>
 </head>
 <body>
-	<div class="wrapper<?//=(isset($post) ? doAction('wrapper_classes', $post) : '');?>" id="wrapper">
+	<div class="wrapper<?=(isset($post) ? doAction('wrapper_classes', $post) : '');?>" id="wrapper">
 		<div class="header">
-			<?php /*if(isMain()):?>
+			<?php if(isMain()):?>
 			<div class="front-menu flex line">
 				<a href="#all-progs">Шоу программы</a>¤
 				<a href="#extra-services">Доп. услуги</a>¤
@@ -25,7 +25,7 @@
 				<a href="#wrapper">Вверх</a>
 				<div class="bottom-phone"><span class="icon-phone" title="Заказать обратный звонок"></span> +38(067) 797-93-85</div>
 			</div>
-			<?php endif;*/?>
+			<?php endif;?>
 			<div class="top-line"></div>
 			<div class="top-sky">
 				<div class="clouds sprite"></div>
@@ -42,7 +42,7 @@
 					</div>
 					<div class="row">
 						<div class="logo-text">
-							<a href="<?=\url('/')?>"><img alt="Логотип. Организация детских праздников Одесса. Аниматоры. Шоу программы. Низкие цены" src="<?=theme_url()?>img/logo_trnsprnt1.png"></a>
+							<a href="<?=url('/')?>"><img alt="Логотип. Организация детских праздников Одесса. Аниматоры. Шоу программы. Низкие цены" src="<?=theme_url()?>img/logo_trnsprnt1.png"></a>
 						</div>
 						<div class="tels fs25">
 							<a href="tel:+380677979385">(067) 797-93-85</a>
@@ -71,14 +71,14 @@
 						</ul>
 					</nav>		
 					<?php //getMenu(); ?>
-					<?php //if(isMain()) doAction('header_after_menu', 'glavnii');?>
+					<?php if(isMain()) doAction('header_after_menu', 'glavnii');?>
 				</div>
 			</div>
 		</div>
 		
 		<div class="content">
 			<div class="container-fluid breadcrumbs">
-				<div class="container"><?//=getBreadCrumbs();?></div>
+				<div class="container"><?=($post['breadcrumbs'] ?? '')?></div>
 			</div>
 				@yield('content')
 				</div>
@@ -89,7 +89,7 @@
 					<div class="row top">
 						<div class="col-md-6">
 							<div class="logo-text">
-								<a href="<?=\url('/')?>"><img src="<?=theme_url()?>img/logo_trnsprnt1.png" alt="Логотип в футере сайта"></a>
+								<a href="<?=url('/')?>"><img src="<?=theme_url()?>img/logo_trnsprnt1.png" alt="Логотип в футере сайта"></a>
 								<div class="inline-title center">Организация детских праздников</div>
 							</div>
 						</div>

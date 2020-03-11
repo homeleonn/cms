@@ -225,6 +225,10 @@ $(function(){
 		})
 	});
 	
+	$('.post-from-admin').submit(function() {
+		this.elements['content'].value = $('#editors span.active').attr('id') == 'visual' ? tinymce.get('content').getContent() : $('textarea#simple-editor').val();
+	});
+	
 	
 	/*common checking inputs*/
 	$('#price').on('blur', function(){

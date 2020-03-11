@@ -1,12 +1,11 @@
 <?php
-$img = isset($data['_jmp_post_img']) ? $data['_jmp_post_img'] : false;
+$img = isset($post['_jmp_post_img']) ? $post['_jmp_post_img'][0] : false;
 $src = $id = $none = $del = '';
 if($img){
-	$src = UPLOADS.$img['src'];
-	$id  = $img['id'];
+	$src = uploads_url() . $img->src;
+	$id  = $img->id;
 }else{
-	$none  = 'none';
-	$del = 'none';
+	$none = $del = 'none';
 }
 ?>
 <div id="post-images" class="side-block">

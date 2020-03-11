@@ -19,27 +19,33 @@ class PostController extends Controller
 	
 	public function __construct(Request $request)
 	{
-		PostsTypes::setCurrentType(explode('.', $request->route()->getAction()['as'])[0]);
-		$this->model = new Post;
-		$this->postOptions = $this->model->postOptions = PostsTypes::getCurrent();
+		// dd($request->route()->getAction());
+		if ($request->route() && isset($request->route()->getAction()['as'])) {
+			PostsTypes::setCurrentType(explode('.', $request->route()->getAction()['as'])[0]);
+			$this->model = new Post;
+			$this->postOptions = $this->model->postOptions = PostsTypes::getCurrent();
+		}
 	}
 	
 	public function actionIndex()
 	{
 		$posts = $this->model->list();
-		return view('admin.posts.index', compact('posts'));
+		$postOptions = $this->postOptions;
+		return view('posts.index', compact('posts', 'postOptions'));
 	}
 
 	
 	public function actionCreate()
 	{
-		return view('admin.posts.create');
+		$post = $this->model->getCreateData();
+		
+		return view('posts.create', compact('post'));
 	}
 
 	
 	public function actionStore(Request $request)
 	{
-		dump($request->all());
+		dd($request->all());
 		// $post_type = 'page';
 		
 		$request->validate([
@@ -50,7 +56,7 @@ class PostController extends Controller
 		// dd(\DB::select('Select count(*) as count from posts where slug = ? and post_type = ?', [$slug, '1'])[0]->count);
 
 
-		Post::create($request->all());
+		// Post::create($request->all());
 
 		return $this->goHome();
 	}
@@ -64,8 +70,12 @@ class PostController extends Controller
 	
 	public function actionEdit($id)
 	{
-		$post = Post::find($id);
-		return view('admin.posts.edit', compact('post'));
+		$post 			= $this->model->getEditData($id);
+		$key 			= '_jmp_post_img';
+		$post[$key] 	= $this->model->getPostImg($post, $key);
+		// $post['comments'] = $this->model->getComments($id);
+		$post['__model'] = $this->model;
+		return view('posts.edit', compact('post'));
 	}
 
 	
@@ -93,9 +103,9 @@ class PostController extends Controller
 		//
 	}
 	
-	public function actionIndex1()
+	public function actionDashboard()
 	{
-		return view(\Options::get('theme') . '.admin.index');
+		return view('index');
 	}
 	
 	private function goHome()

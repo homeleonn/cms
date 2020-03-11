@@ -1,6 +1,13 @@
-@extends('admin.layouts.layout')
+@extends('layout')
 @section('content')
-	<?php /*<h1>Categories</h1>
+	<h1>{{ $postOptions['title'] }}</h1>
+	<a href="{{ route($postOptions['type'] . '.create') }}" class="action-tool plus" title="Добавить">
+		<span class="icon-plus">Добавить</span>
+	</a>
+	
+	<?php 
+	// dd(get_defined_vars());
+	/*<h1>Categories</h1>
 	<a href="{{ route('post.create') }}"><button>Add</button></a>
 	<table border="1">
 		<tr>

@@ -3,6 +3,12 @@
 use App\Helpers\PostsTypes;
 
 
+if (!function_exists('isAdminSide')) {
+	function isAdminSide() {
+		return isset($_SERVER['REQUEST_URI']) && (strpos($_SERVER['REQUEST_URI'], '/admin') === 0);
+	}
+}
+
 addPageType('post', [
 		'type' => 'post',
 		'title' => 'Блог',
@@ -45,9 +51,16 @@ addPageType('page', [
 ]);
 
 addPageType('program', [
+		'type' => 'program',
 		'title' => 'Программы',
-		'description' => 'Programs Description',
-		'h1' => 'Программы',
+		'_seo_title' => 'Детские аниматоры на день рождения Одесса, утренник, выпускной. Пригласить аниматора для ребенка',
+		'h1' => 'Аниматоры, шоу программы на детский праздник в Одессе',
+		'title_for_admin' => 'Программы',
+		'description' => 'Заказать детского аниматора на день рождения ребенка на дом либо на утренник или выпускной в Одессе, широкий выбор аниматоров и шоу программы, а так же красочные детские ведущие, которые порадуют детей интересными конкурсами и подарят массу ярких впечатлений. Все останутся довольны. Заказать аниматора для ребенка на праздник. Цена',
+		'add' => 'Добавить программу',
+		'edit' => 'Редактировать программу',
+		'delete' => 'Удалить программу',
+		'common' => 'программ',
 		'hierarchical' => false,
 		'has_archive'  => 'programs',
 		'rewrite' => ['slug' => 'programs', 'with_front' => false, 'paged' => 5],
@@ -153,7 +166,7 @@ function addPageType(string $type, array $options){
 			Route::get($type . '/term', 'PostController@actionTermIndex')->name("{$type}.term_index");
 			Route::post($type . '/term', 'PostController@actionTermStore')->name("{$type}.term_store");
 			Route::get($type . '/create-term', 'PostController@actionTermCreate')->name("{$type}.term_create");
-			Route::get($type . '/term/{term}', 'PostController@actionTermShow')->name("{$type}.term_show");
+			// Route::get($type . '/term/{term}', 'PostController@actionTermShow')->name("{$type}.term_show");
 			Route::put($type . '/term/{term}', 'PostController@actionTermUpdate')->name("{$type}.term_update");
 			Route::delete($type . '/term/{term}', 'PostController@actionTermDestroy')->name("{$type}.term_destroy");
 			Route::get($type . '/term/{term}/edit', 'PostController@actionTermEdit')->name("{$type}.term_edit");

@@ -909,7 +909,7 @@ function findActiveLink(parent, href = document.location.href){
 	
 $(function(){
 	$('.nav a[href="'+document.location.pathname+'"]').addClass('active');
-	if(document.location.pathname.toString == root){
+	if(document.location.pathname.toString() == root){
 		$('.menu a[href="'+root+'"]').addClass('active');
 	}else{
 		var parts = document.location.pathname.split(root)[1].split('/');

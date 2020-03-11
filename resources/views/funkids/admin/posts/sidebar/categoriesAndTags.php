@@ -1,12 +1,11 @@
 <?php 
-use Jump\helpers\Common;
-//var_dump(get_defined_vars());exit;
-if(Common::isPage()) return;
+// dd(get_defined_vars());
+if($postOptions['type'] == 'page') return;
 
-$selfTerms = isset($data['selfTerms']) ? $data['selfTerms'] : [];
+$selfTerms = isset($post['selfTerms']) ? $post['selfTerms'] : [];
 
-if(isset($options['taxonomy'])):
-	foreach($options['taxonomy'] as $taxonomy => $taxValues):
+if(isset($postOptions['taxonomy'])):
+	foreach($postOptions['taxonomy'] as $taxonomy => $taxValues):
 ?>
 
 <!-- Block for add post <?=$taxonomy?> -->
@@ -15,8 +14,8 @@ if(isset($options['taxonomy'])):
 	<div class="block-content">
 		<div id="term-<?=$taxonomy?>">
 			<?php 
-				if(isset($data['terms'])):
-					showTermHierarchy($data['terms'], $taxonomy, $selfTerms);
+				if(isset($post['terms'])):
+					showTermHierarchy($post['terms'], $taxonomy, $selfTerms);
 				endif;
 			?>
 		</div>
@@ -30,7 +29,9 @@ if(isset($options['taxonomy'])):
 endif;
 
 function showTermHierarchy(&$terms, $taxonomy, $selfTerms, $level = 0){
+	
 	foreach($terms as $key => $termData):
+		$termData = (array)$termData;
 		if($termData['taxonomy'] != $taxonomy) continue;
 		$checked = in_array($termData['id'], $selfTerms) ? 'checked' : '';
 		echo str_repeat('&nbsp;', $level * 5);

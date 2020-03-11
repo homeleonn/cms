@@ -6,10 +6,10 @@
 				<div class="col-md-4 center">Имя</div>
 				<div class="col-md-8 center">Значение</div>
 			</div>
-			<?php 
-				if(isset($data['meta_data'])){
+			<?php
+				if(isset($post['meta_data'])){
 					$index = 0;
-					foreach($data['meta_data'] as $name => $value)
+					foreach($post['meta_data'] as $name => $value)
 						getExtraField($index++, $name, $value);
 				}
 			?>
@@ -25,9 +25,9 @@
 					<select id="select_extra_name" class="w100">
 						<option value="0">-- Выберите --</option>
 						<?php 
-						if(isset($data['extra_fields_list']) && $data['extra_fields_list']){
+						if(isset($post['extra_fields_list']) && $post['extra_fields_list']){
 							$i = 1;
-							foreach($data['extra_fields_list'] as $field){
+							foreach($post['extra_fields_list'] as $field){
 								echo '<option value="',($i++),'">',$field,'</option>';
 							}
 						}

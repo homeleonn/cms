@@ -2,15 +2,16 @@
 
 use App\Helpers\Arr;
 
-require 'posttypes.php';
+
 
 function vd($exit, ...$args){
 	if (true) {
 		$trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1];
-		echo '<small style="color: green;"><pre>',$trace['file'],':',$trace['line'],':</pre></small><pre>';
+		echo '<div ',(isAdminSide() ? 'class="adminside"' : ''),'><small style="color: green;"><pre>',$trace['file'],':',$trace['line'],':</pre></small><pre>';
 	}
 	
 	call_user_func_array(!$exit ? 'dump' : 'dd', $args[0] ? [$args[0]]: [NULL]);
+	echo '</pre></div>';
 }
 
 function d(){
@@ -22,7 +23,7 @@ function ddd(){
 }
 
 function isAdminSide(){
-	return isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], '/admin/') === 0;
+	return isset($_SERVER['REQUEST_URI']) && (strpos($_SERVER['REQUEST_URI'], '/admin') === 0);
 }
 
 function requestUri(){
@@ -229,7 +230,7 @@ function viewWrap($templateFileName, $post, $args = null){
 		$templateFileName = $post['_jmp_post_template'];
 	}
 	
-	return view(Options::get('theme') . '.' . $templateFileName, $args ?? []);
+	return view($templateFileName, $args ?? []);
 }
 
 function redir($url = NULL, $code = 301){
