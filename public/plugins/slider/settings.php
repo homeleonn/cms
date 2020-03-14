@@ -1,13 +1,13 @@
 <?php
 $slider = $_GET['slider'] ?? 'glavnii';
-$sliders = getOption('MySliders', true);//dd($sliders);
+$sliders = \Options::get('MySliders', true);//dd($sliders);
 $images = __DIR__ . '/images/';
 ?>
 
-<link rel="stylesheet" href="<?=PLUGINS?>slider/style.css">
-<link rel="stylesheet" href="<?=PLUGINS?>slider/jquery-ui.min.css">
-<script src="<?=PLUGINS?>slider/js.js"></script>
-<script src="<?=PLUGINS?>slider/jquery-ui.min.js"></script>
+<link rel="stylesheet" href="/plugins/slider/style.css">
+<link rel="stylesheet" href="/plugins/slider/jquery-ui.min.css">
+<script src="/plugins/slider/js.js"></script>
+<script src="/plugins/slider/jquery-ui.min.js"></script>
 
 <form action="" method="POST" enctype="multipart/form-data">
 <div id="plug-my-slider">
@@ -21,18 +21,18 @@ $images = __DIR__ . '/images/';
 	<h2>Слайдер: <u></u></h2>-->
 	<small>Оптимальный размер изображения: 1150х400</small><br><br>
 	<input multiple type="file" accept="image/jpeg,image/png" id="sliderphotos" name="sliderphotos" class="none">
-	<label for="sliderphotos"><img src="<?=ADMIN_THEME?>img/addfile.png" title="Добавить фотографии"></label>
+	<label for="sliderphotos"><img src="/admin_static/img/addfile.png" title="Добавить фотографии"></label>
 	<div class="sorted-save">Сохранить</div>
 	<div id="sliderphotosContainer" class="row">
 		<?php
 		//dd(unserialize(getOption('MySliders')));
 			//foreach (scandir ($images . $slider) as $img) {
-			foreach (getOption('MySliders', true)['images']['glavnii'] as $key => $img) {
+			foreach (\Options::get('MySliders', true)['images']['glavnii'] as $key => $img) {
 				if (!is_dir($img['img'])) {//dd($img);
 					$id = (explode('.', $img['img'])[0]);
 					?> 
 					<div class="col-md-4 slider-img" id="sort-<?=$key?>" data-title="<?=$img['title']?>" data-text="<?=$img['text']?>">
-						<img class="shower" src="<?=PLUGINS . 'slider/images/' . $slider . '/' . $img['img']?>">
+						<img class="shower" src="<?='/plugins/slider/images/' . $slider . '/' . $img['img']?>">
 						<div class="text">&#9998;</div>
 						<div class="del">x</div>
 					</div> 

@@ -2,7 +2,7 @@
 
 use App\Helpers\Arr;
 
-
+const FUNC_DEFINED = TRUE;
 
 function vd($exit, ...$args){
 	if (true) {
@@ -219,6 +219,7 @@ function theme_url(){
 function themeDir(){
 	return resource_path('views/') . Options::get('theme') . '/';
 }
+
 
 
 function urlWithoutParams(){

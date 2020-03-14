@@ -10,12 +10,12 @@ function getSections($type, $pageTypes){
 				$key = ($title) . '||' . ($pt['icon'] ?? 'cog');
 				$sections[$key] = [
 					'Все ' . mb_strtolower($title) => $pt['type'],
-					'Добавить новую' => $pt['type'] . '/add',
+					'Добавить новую' => $pt['type'] . '/create',
 				];
 				if(!empty($pt['taxonomy'])){
 					$ptTaxes = [];
 					foreach($pt['taxonomy'] as $tax => $values){
-						$tempTax = [$values['title'] => $pt['type'] . '/terms/?term=' . $tax];
+						$tempTax = [$values['title'] => $pt['type'] . '/term/?term=' . $tax];
 						if(empty($ptTaxes)){
 							$ptTaxes = $tempTax;
 							continue;

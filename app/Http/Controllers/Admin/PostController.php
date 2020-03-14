@@ -29,6 +29,7 @@ class PostController extends Controller
 	
 	public function actionIndex()
 	{
+		// dd($this->model->list1());
 		$posts = $this->model->list();
 		$postOptions = $this->postOptions;
 		return view('posts.index', compact('posts', 'postOptions'));
@@ -107,6 +108,25 @@ class PostController extends Controller
 	{
 		return view('index');
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	// TERMS
+	
+	public function actionTermIndex()
+	{
+		return view('terms.index');
+	}
+	
+	
+	
+	
+	
 	
 	private function goHome()
 	{

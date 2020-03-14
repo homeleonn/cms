@@ -65,22 +65,13 @@ $response = $kernel->handle(
 $response->send();
 
 $kernel->terminate($request, $response);
-if (isAdminSide()) {
-	echo '<div style="margin-left: 255px;">';
+
+if (defined('FUNC_DEFINED')) {
+	if (isAdminSide()) {
+		echo '<div style="margin-left: px;">';
+	}
+	d(microtime(true) - LARAVEL_START);
+	if ($t = DB::getQueryLog()) {
+		d($t);
+	}
 }
-dump(microtime(true) - LARAVEL_START);
-if ($t = DB::getQueryLog()) {
-	dump($t);
-}
-	// dd(array_map(function($tt){
-		// if (isset($tt[0])) {
-			// foreach ($tt as $key => $t) {
-				// dump($t);
-				// $tt[$key]['time'] = (float)$t['time'] / 1000;
-			// }
-		// } else {
-			// $tt['time'] = (float)$tt['time'] / 1000;
-		// }
-		// return $tt;
-		
-	// }, $t));

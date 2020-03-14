@@ -24,9 +24,14 @@ if (isAdminSide() || !isset($_SERVER['REQUEST_URI'])) {
 		// Route::resource('post', 'PostController');
 		Route::get('/', 'PostController@actionDashboard');
 		
-		Route::get('changeOrder/{orderType}', 'PostController@actionChangeOrder')->name("changeOrder");
-		Route::post('changeOrderValue', 'PostController@actionChangeOrderValue')->name("changeOrderValue");
+		Route::get('changeOrder/{orderType}', 'PostController@actionChangeOrder')->name('changeOrder');
+		Route::post('changeOrderValue', 'PostController@actionChangeOrderValue')->name('changeOrderValue');
+		Route::get('media', 'MediaController@actionIndex')->name('media.index');
+		Route::get('plugins', 'PluginController@actionIndex')->name('plugin.index');
+		Route::get('plugins/settings/{pluginFoler}', 'PluginController@actionSettings')->name('plugin.index')->where('pluginFoler', '(.*)(/(.*))?');
+		
 	});
+	
 }
 
 

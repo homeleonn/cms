@@ -30,7 +30,8 @@ class Options
 	public function get(string $key, $decode = false)
 	{
 		if (!$this->has($key)) {
-			throw new \Exception("Element '{$key}' not found");
+			// throw new \Exception("Element '{$key}' not found");
+			return null;
 		}
 		
 		return $decode ? unserialize($this->options[$key]) : $this->options[$key];

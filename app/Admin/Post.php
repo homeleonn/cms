@@ -10,17 +10,49 @@ class Post extends Model
 {
 	const TEMPLATE = '/^[ \t\/*#@]*Template:(.*)$/mi';
 	
+	public function relationship()
+	{
+		return $this->hasMany('App\Relationship', 'object_id', 'id');
+	}
+	
 	public function __construct()
 	{
 		$this->taxonomy = new \App\Taxonomy;
 	}
+	
+	public function list1()
+	{
+		// $posts = $this->getAll();
+		// d($this->terms()->term_taxonomy_id);
+		$posts = $this->where('post_type', 'program')->with('relationship.taxonomy.terms')->get();
+		// dd($this->where('post_type', 'post')->with('relationship.taxonomy.terms')->get());
+		// dd($posts[0]->relationship[0]->taxonomy->terms);
+		foreach ($posts as $post) {
+			foreach ($post->relationship as $relation) {
+				foreach ($relation->taxonomy->terms as $term) {
+					d($relation->taxonomy->taxonomy . ' -> ' . $term->name);
+				}
+			}
+			// dd($post->relationship);
+			// d($post->relationship->taxonomy->terms->name);
+		}
+		dd($posts, 1);
+		return $posts;
+	}
+	
+	public function getAll()
+	{
+		return $this->where('post_type', $this->postOptions['type'])->get();
+	}
+	
+	
     public function list()
 	{
 		if (!$posts = $this->getAllPosts()) abort(404);
 		$addKeys = [];
 		if(!$this->postOptions['hierarchical']){
 			// Get posts terms
-			foreach($posts as $post) $ids[] = $post['id'];
+			$ids = Arr::column($posts, 'id');
 			$addKeys['_terms'] = $this->getTermsByPostsId($ids);
 			$this->_postTerms = $addKeys;
 			$this->_allTerms = $this->taxonomy->getByTaxonomies();

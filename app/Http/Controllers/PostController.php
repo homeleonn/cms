@@ -43,7 +43,8 @@ class PostController extends Controller
 		}
     }
 	
-	public function last(){
+	public function last()
+	{
 		$this->template = 'front';
 		return $this->actionList();
 	}

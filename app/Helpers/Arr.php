@@ -93,6 +93,12 @@ class Arr{
 		return $hierarchy;
 	}
 	
+	public static function column($arr, $columnName)
+	{
+		foreach ($arr as $a) $res[] = $a[$columnName];
+		return $res;
+	}
+	
 	public static function termsHTML($taxonomies, $archive)
 	{
 		if(!is_array($taxonomies)) return false;

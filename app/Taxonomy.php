@@ -2,14 +2,28 @@
 
 namespace App;
 
+use Illuminate\Database\Eloquent\Model;
+
 use DB;
 use App\Helpers\{PostsTypes, Arr};
 
-class Taxonomy
+class Taxonomy extends Model
 {
+	
+	protected $table = 'term_taxonomy';
 	private $select = 'Select t.*, tt.* from terms as t, term_taxonomy as tt where t.id = tt.term_id and ';
 	private $postTypeTaxonomies;
 	private static $cache;
+	
+	public function terms()
+	{
+		return $this->hasMany('App\Term', 'id', 'term_id');
+	}
+	
+	public function relationship()
+	{
+		return $this->hasMany('App\Relationship', 'term_taxonomy_id', 'term_taxonomy_id');
+	}
 	
 	public function getAll($where, $args)
 	{
