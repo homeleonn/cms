@@ -120,8 +120,55 @@ class PostController extends Controller
 	
 	public function actionTermIndex()
 	{
-		return view('terms.index');
+		if (
+			!isset($_GET['term']) || 
+			(
+				!isset($this->postOptions['taxonomy']) || 
+				!in_array($_GET['term'], array_keys($this->postOptions['taxonomy']))
+			)
+		) abort(404);
+		
+		return view('terms.index', ['term' => $_GET['term'], 'terms' => $this->model->termList($_GET['term'])]);
 	}
+	
+	public function actionTermEdit($id)
+	{
+		$data = $this->model->editTermForm($id);
+		return view('terms.edit', compact('data'));
+	}
+	
+	public function actionTermCreate()
+	{
+		$this->checkGettingTermType($_GET['term']);
+		$data =  $this->model->addTermForm($_GET['term']);
+		return view('terms.create', compact('data'));
+	}
+	
+	public function actionTermStore(Request $request)
+	{
+		dd($request->all());
+	}
+	
+	
+	
+	private function checkGettingTermType($term)
+	{
+		if(!$this->checkValidTerms($term)){
+			$this->goToPostTypePage();
+		}
+	}
+	
+	private function checkValidTerms($term)
+	{
+		return isset($this->postOptions['taxonomy']) ? in_array($term, array_keys($this->postOptions['taxonomy'])) : false;
+	}
+	
+	private function goToPostTypePage()
+	{
+		redir(route($this->options['type'] . '.index'));
+	}
+	
+	
 	
 	
 	

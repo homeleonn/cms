@@ -15,7 +15,7 @@ if(isset($postOptions['taxonomy'])):
 		<div id="term-<?=$taxonomy?>">
 			<?php 
 				if(isset($post['terms'])):
-					showTermHierarchy($post['terms'], $taxonomy, $selfTerms);
+					$post->terms = $post->__model->showTermHierarchy($post->terms, $taxonomy, $selfTerms);
 				endif;
 			?>
 		</div>
@@ -27,20 +27,4 @@ if(isset($postOptions['taxonomy'])):
 <?php
 	endforeach;
 endif;
-
-function showTermHierarchy(&$terms, $taxonomy, $selfTerms, $level = 0){
-	
-	foreach($terms as $key => $termData):
-		$termData = (array)$termData;
-		if($termData['taxonomy'] != $taxonomy) continue;
-		$checked = in_array($termData['id'], $selfTerms) ? 'checked' : '';
-		echo str_repeat('&nbsp;', $level * 5);
-		?>
-			<label><input type="checkbox" name="terms[<?=$taxonomy?>][]" value="<?=$termData['id']?>" <?=$checked?> /> <?=$termData['name']?></label><br>
-		<?php 
-		if(isset($termData['children']))
-			showTermHierarchy($termData['children'], $taxonomy, $selfTerms, $level + 1);
-		unset($terms[$key]);
-	endforeach;
-}
 ?>

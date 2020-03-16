@@ -268,24 +268,29 @@ function funkids_readyToHolyday(){
 }
 
 addFilter('postTypeLink', 'myPostTypeLink');
-function myPostTypeLink($link, $termsOnId, $termsOnParent, $postTerms){//dd(func_get_args());
+function myPostTypeLink($link, $termsOnId, $termsOnParent, $postTerms)
+{
 	$replaceFormat = '/%.*%/';
-	if(!preg_match($replaceFormat, $link)) return $link;
-	// dd($postTerms, Arr::itemsOnKeys($postTerms, ['id']));
-	if(!$postTerms){
+	if (!preg_match($replaceFormat, $link)) {
+		return $link;
+	}
+	
+	if (!$postTerms) {
 		$formatComponent = 'uncategorized';
-	}elseif(is_string($postTerms)){
+	} elseif(is_string($postTerms)) {
 		$formatComponent = $postTerms;
-	}else{
+	} else {
 		if (count($postTerms) == 1) {
 			$formatComponent = $postTerms[0]->slug;
 		} else {
 			$postTermsOnId = Arr::itemsOnKeys($postTerms, ['id']);
 			$current = $postTermsOnId[array_keys($postTermsOnId)[0]][0];
 			$mergeKey = 'slug';
-			$formatComponent = str_replace('|', '/', substr(Arr::builtHierarchyDown($termsOnId, $current, $mergeKey) . '|' . $current[$mergeKey] . '|' . Arr::builtHierarchyUp($termsOnParent, $current, $postTermsOnId, $mergeKey), 1, -1));
-			// $formatComponent = '---';
+			$formatComponent = str_replace('|', '/', substr(Arr::builtHierarchyDown($termsOnId, $current, $mergeKey) 
+			. '|' . 
+			$current->$mergeKey . '|' . Arr::builtHierarchyUp($termsOnParent, $current, $postTermsOnId, $mergeKey), 1, -1));
 		}
 	}
+
 	return preg_replace($replaceFormat, $formatComponent, $link);
 }

@@ -1,5 +1,5 @@
-<?php
-$img = isset($post['_jmp_post_img']) ? $post['_jmp_post_img'][0] : false;
+<?php //dd($post);
+$img = isset($post['_jmp_post_img']) ? ($post['_jmp_post_img'][0] ?? $post['_jmp_post_img']) : false;
 $src = $id = $none = $del = '';
 if($img){
 	$src = uploads_url() . $img->src;

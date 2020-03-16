@@ -68,10 +68,10 @@ $kernel->terminate($request, $response);
 
 if (defined('FUNC_DEFINED')) {
 	if (isAdminSide()) {
-		echo '<div style="margin-left: px;">';
+		echo '<div style="margin-left: 250px;">';
 	}
-	d(microtime(true) - LARAVEL_START);
+	dump(microtime(true) - LARAVEL_START);
 	if ($t = DB::getQueryLog()) {
-		d($t);
+		dump($t);
 	}
 }

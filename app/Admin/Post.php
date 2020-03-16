@@ -5,6 +5,7 @@ namespace App\Admin;
 use Illuminate\Database\Eloquent\Model;
 
 use App\Helpers\{Arr};
+use DB;
 
 class Post extends Model
 {
@@ -24,7 +25,7 @@ class Post extends Model
 	{
 		// $posts = $this->getAll();
 		// d($this->terms()->term_taxonomy_id);
-		$posts = $this->where('post_type', 'program')->with('relationship.taxonomy.terms')->get();
+		$posts = $this->where('post_type', 'post')->with('relationship.taxonomy.terms')->get();
 		// dd($this->where('post_type', 'post')->with('relationship.taxonomy.terms')->get());
 		// dd($posts[0]->relationship[0]->taxonomy->terms);
 		foreach ($posts as $post) {
@@ -111,6 +112,8 @@ class Post extends Model
 			}
 			$itemsToParents[$item->parent ?? 0][] = $item;
 		}
+		
+		if (!isset($itemsToParents)) return [];
 		ksort($itemsToParents);
 		$itemsToParents = array_reverse($itemsToParents, true);
 		if ($this->postOptions['hierarchical'] || $isTerm) {
@@ -143,78 +146,80 @@ class Post extends Model
 		$html = '';
 		foreach($items as $item){
 			if($type == 'select'){
-				$title = isset($item['title']) ? $item['title'] : $item['slug'];
-				$html .= '<option '.($item['id'] == $parent ? 'selected' : '').' value="' . $item['id'] . '">' . str_repeat('&nbsp;', $level * 3) . ($level ? '&#8735;'  : '') . (mb_strlen($title) > 46 ? mb_substr($title, 0, 45) . '...' : $title) . '</option>';
+				$title = isset($item->title) ? $item->title : $item->slug;
+				$html .= '<option '.($item->id == $parent ? 'selected' : '').' value="' . $item->id . '">' . str_repeat('&nbsp;', $level * 3) . ($level ? '&#8735;'  : '') . (mb_strlen($title) > 46 ? mb_substr($title, 0, 45) . '...' : $title) . '</option>';
 			}elseif($type = 'table'){
 				$html .= $this->hierarchyListHtml($item, $level, $urlHierarchy);
 			}
 			
-			if(isset($item['children'])){
-				$urlHierarchy .= (isset($item['slug']) ? $item['slug'] : $item['slug']) . '/';
-				$html .= $this->hierarchy($item['children'], $type, $parent, $level + 1, $urlHierarchy);
+			if(isset($item->children)){
+				$urlHierarchy .= (isset($item->slug) ? $item->slug : $item->slug) . '/';
+				$html .= $this->hierarchy($item->children, $type, $parent, $level + 1, $urlHierarchy);
 			}
 			
-			if(!$item['parent'])
+			if(!$item->parent)
 				$urlHierarchy = '';
 		}
 		return $html;
 	}
 	
-	private function hierarchyListHtml($item, $level, $urlHierarchy){
-		$isPost = !isset($item['taxonomy']);
+	private function hierarchyListHtml($item, $level, $urlHierarchy)
+	{
+		// dd($item);
+		$isPost = !isset($item->taxonomy);
 		$buildLinkFlag = false;
 		if($isPost && !$this->postOptions['hierarchical']){
 			if(!empty($terms = Arr::itemsOnKeys($this->_allTerms, ['id', 'parent']))){
 				list($termsOnId, $termsOnParent) = $terms;
-				$termsByPostId = $this->_postTerms['_terms'][$item['id']];
-				$permalink 	 = url('/') . '/' . trim($this->postOptions['rewrite']['slug'], '/') . '/' . $item['slug'] . '/';
-				$item['slug'] = applyFilter('postTypeLink', $permalink, $termsOnId, $termsOnParent, $termsByPostId);
+				$termsByPostId = $this->_postTerms['_terms'][$item->id];
+				$permalink 	 = url('/') . '/' . trim($this->postOptions['rewrite']['slug'], '/') . '/' . $item->slug . '/';
+				$item->slug = applyFilter('postTypeLink', $permalink, $termsOnId, $termsOnParent, $termsByPostId);
 				$buildLinkFlag = true;
 			}
 		}
 		if($isPost){
-			//$url = $item['slug'];
-			$url = ($this->postOptions['hierarchical'] ? '/' . $urlHierarchy . '/' . $this->postOptions['has_archive'] . $item['slug'] . '/' : ($buildLinkFlag ? $item['slug'] : '/' . $this->postOptions['has_archive'] . '/' . $item['slug'] . '/'));
+			//$url = $item->slug;
+			$url = ($this->postOptions['hierarchical'] ? '/' . $urlHierarchy . '/' . $this->postOptions['has_archive'] . $item->slug . '/' : ($buildLinkFlag ? $item->slug : '/' . $this->postOptions['has_archive'] . '/' . $item->slug . '/'));
 		}else{
-			$url = '/' . $this->postOptions['has_archive'] . '/' . $item['taxonomy'] . '/' . $urlHierarchy . $item['slug'] . '/' ;
+			$url = '/' . $this->postOptions['has_archive'] . '/' . $item->taxonomy . '/' . $urlHierarchy . $item->slug . '/' ;
 		}
 		// dd($item, $url);
 		
 		
 		$link = '<a href="' . $url . '">перейти</a>';
-		$edit = '<a href="' . url('/') . '/admin/' . $this->postOptions['type'] . '/' . $item['id'] . '/' . ($isPost ? 'edit' : 'edit-term') . '/">%s</a>';
+		$edit = '<a href="' . url('/') . '/admin/' . $this->postOptions['type'] . '/' . (!$isPost ? 'term/' : '') . $item->id . '/edit/' . '">%s</a>';
 		ob_start();
 		?>
-			<tr data-post_id="<?=$item['id']?>">
+			<tr data-post_id="<?=$item->id?>">
 				<td class="admin-page-list">
-					<?=str_repeat('&mdash;', $level) . ' ' . sprintf($edit, $item[$isPost ? ($item['short_title']?'short_title':'title') : 'name']);?>
+					<?=str_repeat('&mdash;', $level) . ' ' . sprintf($edit, $item->{$isPost ? ($item->short_title?'short_title':'title') : 'name'});?>
 					<div style="position: absolute;">
 						[<?=$link;?>]
 						[<a href="#">свойства</a>]
 						[<?=sprintf($edit, 'изменить');?>]
-						[<a style="color: red;" href="javascript:void(0);" title="<?=$this->postOptions['delete'] ?? 'Delete'?>" onclick="if(confirm('Подтвердите удаление')) delItem(this,'<?=$this->postOptions['type']?>',<?=$item['id'];?>, '<?=($isPost ? 'post' : 'term')?>');">удалить</span></a>]
+						[<a style="color: red;" href="javascript:void(0);" title="<?=$this->postOptions['delete'] ?? 'Delete'?>" onclick="if(confirm('Подтвердите удаление')) delItem(this,'<?=$this->postOptions['type']?>',<?=$item->id;?>, '<?=($isPost ? 'post' : 'term')?>');">удалить</span></a>]
 					</div>
 				</td>
 				<?php
-					if($this->postOptions['taxonomy'] ?? false && $isPost){
-						if(!isset($item['_terms'])) echo '<td></td>';
+					if(isset($this->postOptions['taxonomy']) && $isPost){
+						if(!isset($item->_terms)) echo '<td></td>';
 						else{
 							$activeTaxonomy = array_keys($this->postOptions['taxonomy']);
 							$termLinks = '';
 							echo '<td>';
-							foreach($item['_terms'] as $term){
+							foreach($item->_terms as $term){
 								if(!in_array($term->taxonomy, $activeTaxonomy)) continue;
 								$termLinks .= '<a href="'. url('/') . '/' . preg_replace('~%.*%~', $term->taxonomy, $this->postOptions['rewrite']['slug']) . '/' . $term->slug . '/">'.$term->name.'</a>, ';
 							}
 							echo substr($termLinks, 0, -2) . '</td>';
 						}
 					}
-					if(isset($item['add_keys'])){
-						foreach($item['add_keys'] as $value)
+					if (isset($item->add_keys)) {
+						foreach($item->add_keys as $value)
 							echo '<td>'.$value.'</td>';
 					}
 				?>
-				<td><?=($isPost ? $item['created'] : $item['count']);?></td>
+				<td><?=($isPost ? $item->created_at : $item->count);?></td>
 			</tr>
 		<?php
 		return ob_get_clean();
@@ -289,68 +294,182 @@ class Post extends Model
 	
 	public function getEditData($id)
 	{
-		if(!$post = self::find($id)) {
+		if (!$post = self::find($id)) {
 			redir(route($this->postOptions['type'] . '.index'));
 		}
 		$post = $this->mergeMeta($post);
 		
-		if($this->postOptions['hierarchical']){
-			$posts = $this->getAllPosts();
-			$post['urlHierarchy'] = $this->getUrlHierarchy($posts, $post['id']);
-			$itemsToParents = $this->hierarchyItems($posts, $post['id']);
-			$post['listForParents1'] = $this->htmlSelectForParentHierarchy($this->hierarchy($itemsToParents, 'select', $post['parent']));
-			$selfTemplate  = isset($post['_jmp_post_template']) ? $post['_jmp_post_template'] : false;
-			$post['templates'] 		= $this->htmlSelectForTemplateList($selfTemplate);
-			$post['anchor'] 	= url('/') . '/' . $post['urlHierarchy'];
-			$post['permalink'] 	= $post['anchor'] . $post['slug'] . '/';
-		}
-		
-		else{
+		if ($this->postOptions['hierarchical']) {
+			$posts 					= $this->getAllPosts();
+			$post->urlHierarchy 	= $this->getUrlHierarchy($posts, $post->id);
+			$itemsToParents 		= $this->hierarchyItems($posts, $post->id);
+			$post->listForParents1 = $this->htmlSelectForParentHierarchy($this->hierarchy($itemsToParents, 'select', $post->parent));
+			$selfTemplate  			= isset($post->_jmp_post_template) ? $post->_jmp_post_template : false;
+			$post->templates 		= $this->htmlSelectForTemplateList($selfTemplate);
+			$post->anchor 			= url('/') . '/' . $post->urlHierarchy;
+			$post->permalink 		= $post->anchor . $post->slug . '/';
+		} else {
 			$termsByPostId = $this->getTermsByPostsId($id)[$id];
 			
 			// terms id of this post for checkbox checked
-			if($termsByPostId)
-				foreach($termsByPostId as $t) $post['selfTerms'][] = $t['term_id'];
+			if ($termsByPostId) {
+				foreach ($termsByPostId as $t) {
+					$selfTerms[] = $t->term_id;
+				}
+				
+				$post->selfTerms = $selfTerms;
+			}
 			
-			$post['terms'] = $this->taxonomy->getByTaxonomies();
-			// Cache::set('allTerms', $post['terms']);
-			list($termsOnId, $termsOnParent) = Arr::itemsOnKeys($post['terms'], ['id', 'parent']);
-			$permalink 	 = url('/') . '/' . trim($this->postOptions['rewrite']['slug'], '/') . '/' . $post['slug'] . '/';
-			$post['permalink'] = applyFilter('postTypeLink', $permalink, $termsOnId, $termsOnParent, $termsByPostId);
-			$post['anchor'] = str_replace($post['slug'] . '/', '', $post['permalink']);
+			$post->terms 		= $this->taxonomy->getByTaxonomies();
+			// Cache::set('allTerms', $post->terms);
+			list($termsOnId, $termsOnParent) = Arr::itemsOnKeys($post->terms, ['id', 'parent']);
+			$permalink 	 		= url('/') . '/' . trim($this->postOptions['rewrite']['slug'], '/') . '/' . $post->slug . '/';
+			$post->permalink 	= applyFilter('postTypeLink', $permalink, $termsOnId, $termsOnParent, $termsByPostId);
+			$post->anchor 		= str_replace($post->slug . '/', '', $post->permalink);
 			
-			if ($post['terms']) {
-				$post['terms'] = $this->hierarchyItems($post['terms']);
+			if ($post->terms) {
+				$post->terms 	= $this->hierarchyItems($post->terms);
 			}
 		}
 		
-		$post['extra_fields_list'] = $this->getExtraFieldsOptions();
+		$post->extra_fields_list = $this->getExtraFieldsOptions();
 		
 		return $post;
 	}
 	
-	public function getPostImg($post, $key)
+	public function termList($term)
 	{
-		if (isset($post[$key])) {
-			return \DB::select('Select * from media where id = ?', [(int)$post[$key]]);
+		$terms = $this->getTermList($term);
+		$termsHierarchy = $this->hierarchyItems($terms);
+		$termsTable = '<table class="mytable"><tr align="center"><td>Заголовок</td><td width="1%">Кол-во</td></tr>' . $this->hierarchy($termsHierarchy, 'table') . '</table>';
+		return $termsTable;
+	}
+	
+	public function showTermHierarchy($terms, $taxonomy, $selfTerms, $level = 0)
+	{
+		foreach ($terms as $key => $termData) {
+			if($termData->taxonomy != $taxonomy) {
+				continue;
+			}
+			$checked = in_array($termData->id, $selfTerms) ? 'checked' : '';
+			echo str_repeat('&nbsp;', $level * 5);
+			?>
+				<label><input type="checkbox" name="terms[<?=$taxonomy?>][]" value="<?=$termData->id?>" <?=$checked?> /> <?=$termData->name?></label><br>
+			<?php 
+			if (isset($termData->children)) {
+				$this->showTermHierarchy($termData->children, $taxonomy, $selfTerms, $level + 1);
+			}
+			unset($terms[$key]);
+		}
+		
+		return $terms;
+	}
+	
+	public function editTermForm($id)
+	{
+		$term = \DB::select('Select t.*, tt.* from terms as t, term_taxonomy as tt where t.id = tt.term_id and t.id = ?', [$id])[0];
+		$itemsToParents = $this->hierarchyItems($this->getAllTerms($term->taxonomy), $term->id);
+		$data['listForParents'] = $this->htmlSelectForParentHierarchy($this->hierarchy($itemsToParents, 'select', $term->parent));
+		$data['term'] = $term;
+		
+		return $data;
+		
+	}
+	
+	public function getAllTerms($taxonomies){
+		if (!is_array($taxonomies)) {
+			$taxonomies = [$taxonomies];
+		}
+		$taxonomies = implode("','", $taxonomies);
+		
+		if(!isset($this->allTerms[$taxonomies])){
+			// $this->allTerms[$taxonomies] = \DB::select('Select t.*, tt.* from terms as t, term_taxonomy as tt where t.id = tt.term_taxonomy_id and tt.taxonomy IN(\''.$taxonomies.'\')');
+			$this->s('allTerms.' . $taxonomies, DB::select('Select t.*, tt.* from terms as t, term_taxonomy as tt where t.id = tt.term_taxonomy_id and tt.taxonomy IN(\''.$taxonomies.'\')'));
+		}
+		
+		return $this->allTerms[$taxonomies];
+	}
+	
+	
+	public function addTerm($name, $term, $whisper = false, $slug = '', $description = '', $parent = 0){
+		return $this->addTermHelper($name, $term, $whisper, $slug, $description, $parent );
+	}
+	
+	public function addTermHelper($name, $term, $whisper = false, $slug = '', $description = '', $parent = 0){//dd(func_get_args());
+		// Checking on duplicate term for this taxonomy
+		$duplicate = DB::select('Select t.id from terms t, term_taxonomy tt where t.id = tt.term_id and t.slug = ?s and tt.taxonomy = \'' . $term .'\'', $name);
+		
+		if($duplicate){
+			return false;
+		}
+		
+		if($parent){
+			$parent = DB::select('Select t.id from terms t, term_taxonomy tt where t.id = tt.term_id and t.id = ?', $parent);
+		
+			if(!$parent){
+				return false;
+			}
+			$parent = $parent[0];
+		}else{
+			$parent = 0;
+		}
+		
+		
+		// Add new term and taxonomy
+		if (DB::insert('INSERT INTO terms (name, slug) VALUES (?, ?)', $name, $slug ?: $name)) {
+			DB::insert('INSERT INTO term_taxonomy (term_id, taxonomy, description, parent) VALUES (?, ?, ?, ?)', DB::getPdo()->lastInsertId(), $term, $description, $parent);
 		}
 	}
 	
-	public function mergeMeta($post, $mod = false){
-		// $meta = \App\Postmeta::where('post_id', $post['id'])->get();
-		$meta = \DB::select('Select meta_key, meta_value from postmeta where post_id = ?', [$post['id']]);
-		if(!$meta) return $post;
-		foreach($meta as $m){
-			$m = (array)$m;
-			if($mod && $m['meta_key'] == '_jmp_post_img'){
-				$media = (array)DB::select('select * from media where id = ' . $m['meta_value'])[0];
-				$m['meta_value'] = $media['src'];
-				$post['_jmp_post_img_meta'] = unserialize($media['meta']);
+	public function addTermForm($term)
+	{
+		$data['term'] 			= $data['add'] = $term;
+		$itemsToParents 		= $this->hierarchyItems($this->getAllTerms($term));
+		$data['listForParents'] = $this->htmlSelectForParentHierarchy($this->hierarchy($itemsToParents));
+		
+		return $data;
+	}
+	
+	
+	public function s($key, $value) 
+	{
+		$keys = explode('.', $key);
+		$countKeys = count($keys);
+		if ($countKeys == 1) {
+			$this->attributes[$keys[0]] = $value;
+		} elseif ($countKeys == 2) {
+			$this->attributes[$keys[0]][$keys[1]] = $value;
+		} elseif ($countKeys == 3) {
+			$this->attributes[$keys[0]][$keys[1]][$keys[2]] = $value;
+		} elseif ($countKeys == 4) {
+			$this->attributes[$keys[0]][$keys[1]][$keys[2]][$keys[3]] = $value;
+		}
+	}
+	
+	public function getPostImg($post, $key)
+	{
+		if (isset($post[$key])) {//dd((int)$post[$key], Media::where( 'id', (int)$post[$key])->get(), Media::find((int)$post[$key]));
+			// return \DB::select('Select * from media where id = ?', [(int)$post[$key]]);
+			// return Media::first($post[$key]);
+			return Media::where( 'id', (int)$post[$key])->first();
+		}
+	}
+	
+	public function mergeMeta($post, $mod = false)
+	{
+		if(!$meta = \App\PostMeta::where('post_id', $post->id)->get()) {
+			return $post;
+		}
+		foreach ($meta as $m) {
+			if ($mod && $m['meta_key'] == '_jmp_post_img') {
+				$media 						= Media::find($m['meta_value']);
+				$m['meta_value'] 			= $media['src'];
+				$post->_jmp_post_img_meta = unserialize($media['meta']);
 				
 			}
 			$post[$m['meta_key']] = $m['meta_value'];
-			if(mb_substr($m['meta_key'], 0, 1) == '_') continue;
-			$post['meta_data'][$m['meta_key']] = $m['meta_value'];
+			if (mb_substr($m['meta_key'], 0, 1) == '_') continue;
+			$post->meta_data[$m['meta_key']] = $m['meta_value'];
 		}
 		return $post;
 	}
@@ -358,7 +477,7 @@ class Post extends Model
 	public function getUrlHierarchy($posts, $childId)
 	{
 		foreach($posts as $post){
-			$postsKeysId[$post['id']] = $post;
+			$postsKeysId[$post->id] = $post;
 		}
 		$hierarchyUrl = '';
 		if(isset($postsKeysId[$postsKeysId[$childId]['parent']]))
@@ -422,7 +541,7 @@ class Post extends Model
 				//$preLength = count($sortedPosts);
 				
 				foreach ($allPosts[$postType][$key] as $post) {
-					$sortedPosts[$post['id']] = $post;
+					$sortedPosts[$post->id] = $post;
 				}
 				
 				$allPosts[$postType][$key] = $sortedPosts;

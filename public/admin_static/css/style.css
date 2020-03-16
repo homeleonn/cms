@@ -370,12 +370,12 @@ ul.my1{
 
 table.mytable{
 	width: 100%;
-	margin: 2px;
+	/* margin: 2px; */
 }
 
 
 table.mytable tr:first-child td {
-	border: 0;
+	/* border: 0; */
 	border-right: 1px #e0e0e0 solid;
 }
 

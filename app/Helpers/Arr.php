@@ -81,9 +81,9 @@ class Arr{
 		if($level > 10) exit('stop recursion');
 		$hierarchy = '';
 		
-		if(isset($itemsOnParent[$current['id']])){
-			foreach($itemsOnParent[$current['id']] as $possibleNext){
-				if($possibleNext['parent'] == $current['id'] && isset($postTermsOnId[$possibleNext['id']])){
+		if(isset($itemsOnParent[$current->id])){
+			foreach($itemsOnParent[$current->id] as $possibleNext){
+				if($possibleNext['parent'] == $current->id && isset($postTermsOnId[$possibleNext['id']])){
 					$next = $possibleNext;
 				}
 			}
@@ -126,5 +126,10 @@ class Arr{
 			$html .= '</div></div>';
 		}
 		return $html;
+	}
+	
+	public static function toArray($var)
+	{
+		return json_decode(json_encode($var), true);
 	}
 }
