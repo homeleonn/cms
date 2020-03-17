@@ -15,7 +15,7 @@ function getSections($type, $pageTypes){
 				if(!empty($pt['taxonomy'])){
 					$ptTaxes = [];
 					foreach($pt['taxonomy'] as $tax => $values){
-						$tempTax = [$values['title'] => $pt['type'] . '/term/?term=' . $tax];
+						$tempTax = [$values['title'] => $pt['type'] . '/term/?taxonomy=' . $tax];
 						if(empty($ptTaxes)){
 							$ptTaxes = $tempTax;
 							continue;

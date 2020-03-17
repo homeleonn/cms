@@ -9,7 +9,16 @@ $term = $data['term'];
 $post['listForParents1'] = $data['listForParents'];
 ?>
 <h2><?=$postOptions['taxonomy'][$term->taxonomy]['edit']?></h2>
-<form method="POST" id="edit-term-<?=$postOptions['type']?>" class="post-from-admin" name="" autocomplete="off">
+@include('layouts.errors')
+{{ 
+	Form::open([
+		'route' 		=> [$postOptions["type"] . '.term_update', $term->id], 
+		'class' 		=> 'post-from-admin', 
+		'autocomplete' 	=> 'off', 
+		'id' 			=> 'edit-term-' . $postOptions['type'], 
+		'method' 		=> 'PUT'
+	]) 
+}}
 	<div id="center" class="col-md-8">
 		<input type="hidden" name="id" value="<?=$term->id?>">
 		<div class="block1">
@@ -34,5 +43,5 @@ $post['listForParents1'] = $data['listForParents'];
 	
 	<div class="sep"></div>
 	
-</FORM>
+{{ Form::close() }}
 @endsection

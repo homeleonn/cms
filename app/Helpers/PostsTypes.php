@@ -55,4 +55,9 @@ class PostsTypes
 		return $options['has_archive'] . ($options['has_archive'] ? '/' : '');
 	}
 	
+	public static function checkTaxonomyValid($taxonomy)
+	{
+		$current = self::getCurrent();
+		return isset($current['taxonomy']) && array_key_exists($taxonomy, $current['taxonomy']);
+	}
 }

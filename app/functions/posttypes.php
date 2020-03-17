@@ -160,9 +160,9 @@ function addPageType(string $type, array $options){
 	
 	
 	if (isAdminSide() || !isset($_SERVER['REQUEST_URI'])) {
-		Route::group(['prefix' => 'admin', 'namespace' => 'Admin'], function() use ($type){
+		Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'web'], function() use ($type){
 			Route::get($type, 'PostController@actionIndex')->name("{$type}.index");
-			Route::post($type, 'PostController@actionStore')->name("{$type}.store");
+			Route::post($type, 'PostController@actionStore')->middleware('web')->name("{$type}.store");
 			Route::get($type.'/create', 'PostController@actionCreate')->name("{$type}.create");
 			// Route::get($type.'/{post}', 'PostController@actionShow')->name("{$type}.show");
 			Route::put($type.'/{post}', 'PostController@actionUpdate')->name("{$type}.update");

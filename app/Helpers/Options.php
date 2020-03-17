@@ -27,6 +27,11 @@ class Options
 		$this->options[$key] = $value;
 	}
 	
+	public function push(string $key, $value): void
+	{
+		Arr::push($this->options, $key, $value);
+	}
+	
 	public function get(string $key, $decode = false)
 	{
 		if (!$this->has($key)) {

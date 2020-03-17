@@ -5,7 +5,10 @@ namespace App\Admin;
 use Illuminate\Database\Eloquent\Model;
 
 use App\Helpers\{Arr};
+use App\{Term, Taxonomy, Relationships};
 use DB;
+use Session;
+use Options;
 
 class Post extends Model
 {
@@ -337,9 +340,9 @@ class Post extends Model
 		return $post;
 	}
 	
-	public function termList($term)
+	public function termList($taxonomy)
 	{
-		$terms = $this->getTermList($term);
+		$terms = $this->getTermList($taxonomy);
 		$termsHierarchy = $this->hierarchyItems($terms);
 		$termsTable = '<table class="mytable"><tr align="center"><td>Заголовок</td><td width="1%">Кол-во</td></tr>' . $this->hierarchy($termsHierarchy, 'table') . '</table>';
 		return $termsTable;
@@ -391,13 +394,40 @@ class Post extends Model
 	}
 	
 	
-	public function addTerm($name, $term, $whisper = false, $slug = '', $description = '', $parent = 0){
-		return $this->addTermHelper($name, $term, $whisper, $slug, $description, $parent );
+	// public function addTerm($name, $term, $slug = '', $description = '', $parent = 0)
+	public function addTerm($fields)
+	{
+		if ($this->checkTermDuplicate($fields['taxonomy'], $fields['slug'])) {
+			$errors[] = "Duplicate term for <b>{$this->postOptions['type']}</b> taxonomy: <b>{$fields['taxonomy']}</b>";
+		}
+		
+		if ($fields['parent'] != 0 && $this->checkTermParentexists($fields['parent'])) {
+			$errors[] = "Parent is Invalid";
+		}
+		
+		if (isset($errors)) {
+			Session::flash('flash_errors', $errors);
+			redir(url()->previous(), 302);
+		}
+		
+		if ($term = Term::create($fields)) {
+			Taxonomy::create(array_merge($fields, ['term_id' => $term->id, 'count' => 0]));
+		}
+	}
+	
+	private function checkTermDuplicate($taxonomy, $slug)
+	{
+		return selectRow('Select t.id from terms t, term_taxonomy tt where t.id = tt.term_id and tt.taxonomy = ? and t.slug = ?', [$taxonomy, $slug]);
+	}
+	
+	private function checkTermParentexists($parent)
+	{
+		return selectOne('Select t.id from terms t, term_taxonomy tt where t.id = tt.term_id and t.id = ?', [$parent]);
 	}
 	
 	public function addTermHelper($name, $term, $whisper = false, $slug = '', $description = '', $parent = 0){//dd(func_get_args());
 		// Checking on duplicate term for this taxonomy
-		$duplicate = DB::select('Select t.id from terms t, term_taxonomy tt where t.id = tt.term_id and t.slug = ?s and tt.taxonomy = \'' . $term .'\'', $name);
+		$duplicate = DB::select('Select t.id from terms t, term_taxonomy tt where t.id = tt.term_id and t.slug = ? and tt.taxonomy = ?', [$name, $term]);
 		
 		if($duplicate){
 			return false;
@@ -423,7 +453,7 @@ class Post extends Model
 	
 	public function addTermForm($term)
 	{
-		$data['term'] 			= $data['add'] = $term;
+		$data['taxonomy'] 		= $data['add'] = $term;
 		$itemsToParents 		= $this->hierarchyItems($this->getAllTerms($term));
 		$data['listForParents'] = $this->htmlSelectForParentHierarchy($this->hierarchy($itemsToParents));
 		
@@ -433,18 +463,21 @@ class Post extends Model
 	
 	public function s($key, $value) 
 	{
-		$keys = explode('.', $key);
-		$countKeys = count($keys);
-		if ($countKeys == 1) {
-			$this->attributes[$keys[0]] = $value;
-		} elseif ($countKeys == 2) {
-			$this->attributes[$keys[0]][$keys[1]] = $value;
-		} elseif ($countKeys == 3) {
-			$this->attributes[$keys[0]][$keys[1]][$keys[2]] = $value;
-		} elseif ($countKeys == 4) {
-			$this->attributes[$keys[0]][$keys[1]][$keys[2]][$keys[3]] = $value;
-		}
+		// $keys = explode('.', $key);
+		// $countKeys = count($keys);
+		// if ($countKeys == 1) {
+			// $this->attributes[$keys[0]] = $value;
+		// } elseif ($countKeys == 2) {
+			// $this->attributes[$keys[0]][$keys[1]] = $value;
+		// } elseif ($countKeys == 3) {
+			// $this->attributes[$keys[0]][$keys[1]][$keys[2]] = $value;
+		// } elseif ($countKeys == 4) {
+			// $this->attributes[$keys[0]][$keys[1]][$keys[2]][$keys[3]] = $value;
+		// }
+		
+		Arr::push($this->attributes, $key, $value);
 	}
+	
 	
 	public function getPostImg($post, $key)
 	{

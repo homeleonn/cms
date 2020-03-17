@@ -132,4 +132,52 @@ class Arr{
 	{
 		return json_decode(json_encode($var), true);
 	}
+	
+	public static function push(&$array, $key, $value)
+	{
+		if (is_null($key)) {
+			return $array = $value;
+		}
+
+		$keys = explode('.', $key);
+		
+		if (true) {
+			Arr::pushInfinity($array, $keys, $value);
+		} else {
+			Arr::pushLimited($array, $keys, $value);
+		}
+		
+		return $array;
+	}
+
+	private static function pushInfinity(&$array, $keys, $value) {
+		while (count($keys) > 1) {
+			$key = array_shift($keys);
+			
+			if (! isset($array[$key]) || ! is_array($array[$key])) {
+				$array[$key] = [];
+			}
+
+			$array = &$array[$key];
+		}
+
+		$array[array_shift($keys)] = $value;
+		
+		return $array;
+	}
+
+	private static function pushLimited(&$array, $keys, $value) {
+		$countKeys = count($keys);
+		if ($countKeys == 1) {
+			$array[$keys[0]] = $value;
+		} elseif ($countKeys == 2) {
+			$array[$keys[0]][$keys[1]] = $value;
+		} elseif ($countKeys == 3) {
+			$array[$keys[0]][$keys[1]][$keys[2]] = $value;
+		} elseif ($countKeys == 4) {
+			$array[$keys[0]][$keys[1]][$keys[2]][$keys[3]] = $value;
+		}
+		
+		return $array;
+	}
 }

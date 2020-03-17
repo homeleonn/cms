@@ -1,6 +1,6 @@
 <?php
 
-use App\Helpers\Arr;
+use App\Helpers\{Arr, PostsTypes};
 
 const FUNC_DEFINED = TRUE;
 
@@ -234,14 +234,51 @@ function viewWrap($templateFileName, $post, $args = null){
 	return view($templateFileName, $args ?? []);
 }
 
-function redir($url = NULL, $code = 301){
+function redir1($url, $code = 301){
 	$codes = [
 		301 => 'Moved Permanently',
+		302 => 'Found',
 	];
-		
+	
+	doAction('before_redirect');
+	
 	header("HTTP/1.1 {$code} {$codes[$code]}");
 	header('Location:' . $url);
 	exit;
+}
+
+function redir($url, $code = 302)
+{
+	
+    try {
+        \App::abort($code, '', ['Location' => $url]);
+    } catch (\Exception $exception) {
+		$codes = [
+			301 => 'Moved Permanently',
+			302 => 'Found',
+		];
+			
+		doAction('before_redirect');
+		
+		header("HTTP/1.1 {$code} {$codes[$code]}");
+		header('Location:' . $url);
+		exit;
+        // the blade compiler catches exceptions and rethrows them
+        // as ErrorExceptions :(
+        //
+        // also the __toString() magic method cannot throw exceptions
+        // in that case also we need to manually call the exception
+        // handler
+        // $previousErrorHandler = set_exception_handler(function () {});
+        // restore_error_handler();
+        // call_user_func($previousErrorHandler, $exception);
+        // die;
+    }
+}
+
+addAction('before_redirect', 'jump_beforeRedirect');
+function jump_beforeRedirect() {
+	Session::save();
 }
 
 
@@ -294,3 +331,23 @@ function myPostTypeLink($link, $termsOnId, $termsOnParent, $postTerms)
 
 	return preg_replace($replaceFormat, $formatComponent, $link);
 }
+
+function selectOne(string $query, array $args = null) {
+	$result = !$args ? DB::select($query) : DB::select($query, $args);
+	
+	if ($result = $result[0] ?? null) {
+		$result = is_array($result) ? $result : (array)$result;
+	}
+	
+	return array_shift($result);
+}
+
+function selectRow(string $query, array $args = null) {
+	$result = !$args ? DB::select($query) : DB::select($query, $args);
+	return $result[0] ?? null;
+}
+
+function routeType($name) {
+	return route(PostsTypes::get('type') . ".{$name}");
+}
+

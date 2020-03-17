@@ -22,7 +22,7 @@ if (isAdminSide() || !isset($_SERVER['REQUEST_URI'])) {
 	Route::group(['prefix' => 'admin', 'namespace' => 'Admin'], function(){
 		// Route::resource('categories', 'CategoryController');
 		// Route::resource('post', 'PostController');
-		Route::get('/', 'PostController@actionDashboard');
+		Route::get('/', 'PostController@actionDashboard')->name('admin.index')->middleware('web');
 		
 		Route::get('changeOrder/{orderType}', 'PostController@actionChangeOrder')->name('changeOrder');
 		Route::post('changeOrderValue', 'PostController@actionChangeOrderValue')->name('changeOrderValue');

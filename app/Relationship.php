@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class Relationship extends Model
 {
 	protected $table = 'term_relationships';
+	protected $fillable = ['object_id', 'term_taxonomy_id'];
+	public $timestamps = false;
 	
 	public function post()
 	{

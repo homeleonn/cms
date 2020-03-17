@@ -10,6 +10,7 @@ use Illuminate\Validation\Rule;
 use App\Traits\Helper;
 use App\Helpers\{PostsTypes, Arr, Pagination};
 use App\Admin\Post;
+use App\Term;
 
 class PostController extends Controller
 {
@@ -106,6 +107,7 @@ class PostController extends Controller
 	
 	public function actionDashboard()
 	{
+		d(\Session::all());
 		return view('index');
 	}
 	
@@ -121,14 +123,14 @@ class PostController extends Controller
 	public function actionTermIndex()
 	{
 		if (
-			!isset($_GET['term']) || 
+			!isset($_GET['taxonomy']) || 
 			(
 				!isset($this->postOptions['taxonomy']) || 
-				!in_array($_GET['term'], array_keys($this->postOptions['taxonomy']))
+				!array_key_exists($_GET['taxonomy'], $this->postOptions['taxonomy'])
 			)
 		) abort(404);
 		
-		return view('terms.index', ['term' => $_GET['term'], 'terms' => $this->model->termList($_GET['term'])]);
+		return view('terms.index', ['taxonomy' => $_GET['taxonomy'], 'terms' => $this->model->termList($_GET['taxonomy'])]);
 	}
 	
 	public function actionTermEdit($id)
@@ -139,14 +141,62 @@ class PostController extends Controller
 	
 	public function actionTermCreate()
 	{
-		$this->checkGettingTermType($_GET['term']);
-		$data =  $this->model->addTermForm($_GET['term']);
+		if (!isset($_GET['taxonomy'])) {
+			return redirect(url()->previous());
+		}
+		$this->checkGettingTermType($_GET['taxonomy']);
+		$data = $this->model->addTermForm($_GET['taxonomy']);
 		return view('terms.create', compact('data'));
 	}
 	
 	public function actionTermStore(Request $request)
 	{
-		dd($request->all());
+		$this->termValidate($request);
+		
+		if (!PostsTypes::checkTaxonomyValid($request->get('taxonomy'))) {
+			return redirect($this->route('term_create'));
+		}
+		
+		$this->model->addTerm($request->all());
+		
+		return redirect($this->route('term_index'));
+	}
+	
+	public function actionTermUpdate(Request $request)
+	{
+		d($request->all());
+		$term = Term::find($request->get('id'));
+		$term->fill($request->all());
+		dd($term);
+		$this->termValidate($request);
+	}
+	
+	private function termValidate(Request $request)
+	{
+		$request->validate([
+			'taxonomy' => 'required',	
+			'name' => 'required',
+			'slug' => 'required',
+			'parent' => 'required|integer',
+		]);
+	}
+	
+	private function route($name)
+	{
+		return route("{$this->postOptions['type']}.{$name}");
+	}
+	
+	private function massRequired(array $fields, Request $request = null)
+	{
+		$all = $request ? $request->all() : \App::make('request')->all();
+		
+		foreach ($fields as $field) {
+			if (!isset($all[$field])) {
+				redir($this->route('term_create') . '?msg=Не все поля заполнены');
+			}
+		}
+		
+		return true;
 	}
 	
 	
@@ -160,7 +210,7 @@ class PostController extends Controller
 	
 	private function checkValidTerms($term)
 	{
-		return isset($this->postOptions['taxonomy']) ? in_array($term, array_keys($this->postOptions['taxonomy'])) : false;
+		return isset($this->postOptions['taxonomy']) ? array_key_exists($term, $this->postOptions['taxonomy']) : false;
 	}
 	
 	private function goToPostTypePage()

@@ -9,8 +9,9 @@ use App\Helpers\{PostsTypes, Arr};
 
 class Taxonomy extends Model
 {
-	
+	protected $fillable = ['term_id', 'taxonomy', 'description', 'parent', 'count'];
 	protected $table = 'term_taxonomy';
+	public $timestamps = false;
 	private $select = 'Select t.*, tt.* from terms as t, term_taxonomy as tt where t.id = tt.term_id and ';
 	private $postTypeTaxonomies;
 	private static $cache;

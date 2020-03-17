@@ -8,7 +8,8 @@ if(isset($_GET['msg']))
 	echo "<h3 style='padding: 10px;background: lightgreen;'>{$_GET['msg']}</h3>";
 $post['listForParents1'] = $data['listForParents'];
 ?>
-<h2><?=$postOptions['taxonomy'][$data['term']]['add']?></h2>
+<h2><?=$postOptions['taxonomy'][$data['taxonomy']]['add']?></h2>
+@include('layouts.errors')
 {{ 
 	Form::open([
 		'route' 		=> $postOptions["type"] . '.term_store', 
@@ -19,15 +20,15 @@ $post['listForParents1'] = $data['listForParents'];
 	]) 
 }}
 	<div id="center" class="col-md-8">
-		<input type="hidden" name="term" value="<?=$data['term']?>">
+		<input type="hidden" name="taxonomy" value="<?=$data['taxonomy']?>">
 		<div class="block1">
 			<div>Имя</div>
-			<div><input class="w100" type="text" name="name" id="name" placeholder=""></div>
+			<div><input class="w100" type="text" name="name" id="name" placeholder="" value=""></div>
 		</div>
 		
 		<div class="block1">
 			<div>Slug</div>
-			<div><input class="w100" type="text" name="slug" id="slug" placeholder=""></div>
+			<div><input class="w100" type="text" name="slug" id="slug" placeholder="" value=""></div>
 		</div>
 		
 		<div class="block1">
