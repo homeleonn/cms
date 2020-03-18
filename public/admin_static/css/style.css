@@ -264,6 +264,13 @@ input[type="button"]:active{
 	background: #d2ffd2;
 }
 
+.but-as-link{ 
+	padding: 0;
+	background:transparent;
+	font-weight: normal;
+	vertical-align: initial;
+}
+
 html,
 body {
 	height: 100%;

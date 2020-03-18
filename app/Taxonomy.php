@@ -9,6 +9,7 @@ use App\Helpers\{PostsTypes, Arr};
 
 class Taxonomy extends Model
 {
+	protected $primaryKey = 'term_taxonomy_id';
 	protected $fillable = ['term_id', 'taxonomy', 'description', 'parent', 'count'];
 	protected $table = 'term_taxonomy';
 	public $timestamps = false;

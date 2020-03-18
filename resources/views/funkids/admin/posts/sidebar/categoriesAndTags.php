@@ -15,7 +15,7 @@ if(isset($postOptions['taxonomy'])):
 		<div id="term-<?=$taxonomy?>">
 			<?php 
 				if(isset($post['terms'])):
-					$post->terms = $post->__model->showTermHierarchy($post->terms, $taxonomy, $selfTerms);
+					$post['terms'] = $post['__model']->showTermHierarchy($post['terms'], $taxonomy, $selfTerms);
 				endif;
 			?>
 		</div>

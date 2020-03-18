@@ -247,9 +247,21 @@ function redir1($url, $code = 301){
 	exit;
 }
 
-function redir($url, $code = 302)
-{
+function rdr($url = ':back', $code = 301, $with = null) {
+	if ($url == ':back') {
+		$url = url()->previous();
+	}
 	
+	if ($with) {
+		\Session::flash('flash_errors', is_array($with) ? $with : [$with]);
+	}
+	
+	throw new \Illuminate\Http\Exceptions\HttpResponseException(redirect($url, $code));
+}
+
+function redir($url, $code = 301)
+{
+	// throw new \Illuminate\Http\Exception\HttpResponseException(redirect($to));
     try {
         \App::abort($code, '', ['Location' => $url]);
     } catch (\Exception $exception) {
@@ -257,6 +269,7 @@ function redir($url, $code = 302)
 			301 => 'Moved Permanently',
 			302 => 'Found',
 		];
+			dd($exception);
 			
 		doAction('before_redirect');
 		
@@ -281,28 +294,6 @@ function jump_beforeRedirect() {
 	Session::save();
 }
 
-
-function funkids_readyToHolyday(){
-?>
-<div class="holyday" id="holyday">
-	<h2 class="section-title">Готовимся к празднику уже сейчас</h2>
-	<div id="order-question">
-		Напишите нам и наш менеджер ответит на все Ваши вопросы
-		<div class="inp1">
-			<input type="text" id="qname" name="name" placeholder="Имя*">
-			<input type="text" id="qtel" name="tel" placeholder="Телефон*">
-			<input type="text" id="qmail" name="email" placeholder="Электронная почта">
-		</div>
-		<div class="captcha-wrapper none center">
-			<img alt="captcha" class="captcha pointer captcha-reload">
-			<span class="icon-arrows-cw captcha-reload" title="Обновить капчу"></span><br>Введите символы с картинки 
-			<input type="text" class="captcha-code">
-		</div>
-		<input type="button" class="button1" id="q-set" value="Отправить">
-	</div>
-</div>
-<?php
-}
 
 addFilter('postTypeLink', 'myPostTypeLink');
 function myPostTypeLink($link, $termsOnId, $termsOnParent, $postTerms)
@@ -337,9 +328,10 @@ function selectOne(string $query, array $args = null) {
 	
 	if ($result = $result[0] ?? null) {
 		$result = is_array($result) ? $result : (array)$result;
+		return array_shift($result);
 	}
 	
-	return array_shift($result);
+	return false;
 }
 
 function selectRow(string $query, array $args = null) {
@@ -349,5 +341,45 @@ function selectRow(string $query, array $args = null) {
 
 function routeType($name) {
 	return route(PostsTypes::get('type') . ".{$name}");
+}
+
+function textSanitize($contents, $type = null, $tagsOn = false) {
+	$types = [
+		'all' => [
+			'from' 	=> ['<?php', '<?', '<%'],
+			'to' 	=> ['']
+		],
+		'content' => [
+			'from' 	=> [],
+			'to' 	=> []
+		],
+		'title' => [
+			'from' 	=> ['\'', '"'],
+			'to' 	=> ['’', '»']
+		],
+	];
+	
+	if (!is_array($contents)) {
+		$contents = [$contents];
+	}
+	
+	foreach ($contents as &$content) {
+		if (!is_string($content)) {
+			continue;
+		}
+		
+		$content = str_replace($types['all']['from'], $types['all']['to'], trim($content));
+		$content = preg_replace('/\s+/', ' ', $content);
+		
+		if ($type && isset($types[$type])) {
+			$content = str_replace($types[$type]['from'], $types[$type]['to'], $content);
+		}
+		
+		if(!$tagsOn && !$type == 'content') {
+			$content = htmlspecialchars($content);
+		}
+	}
+	
+	return $contents;
 }
 

@@ -21,6 +21,7 @@ $post['listForParents1'] = $data['listForParents'];
 }}
 	<div id="center" class="col-md-8">
 		<input type="hidden" name="id" value="<?=$term->id?>">
+		<input type="hidden" name="taxonomy" value="<?=$term->taxonomy?>">
 		<div class="block1">
 			<div>Имя</div>
 			<div><input class="w100" type="text" name="name" id="name" value="<?=$term->name?>" placeholder=""></div>

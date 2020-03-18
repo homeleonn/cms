@@ -366,3 +366,12 @@ function getVisual(){
 	$('.mce-tinymce').css('display', 'block');
 	tinymce.get('content').setContent(content = $('textarea#simple-editor').css('display', 'none').val());
 }
+
+function addField(name, value) {
+	var text = document.createElement("input");
+    text.setAttribute("type", "hidden");
+	text.setAttribute("name", name);
+	text.setAttribute("value", value);
+	
+	return text;
+}

@@ -22,6 +22,7 @@ class Post extends Model
 	public function __construct()
 	{
 		$this->taxonomy = new \App\Taxonomy;
+		
 	}
 	
 	public function list1()
@@ -168,7 +169,7 @@ class Post extends Model
 	
 	private function hierarchyListHtml($item, $level, $urlHierarchy)
 	{
-		// dd($item);
+		// d($item);
 		$isPost = !isset($item->taxonomy);
 		$buildLinkFlag = false;
 		if($isPost && !$this->postOptions['hierarchical']){
@@ -200,7 +201,11 @@ class Post extends Model
 						[<?=$link;?>]
 						[<a href="#">свойства</a>]
 						[<?=sprintf($edit, 'изменить');?>]
-						[<a style="color: red;" href="javascript:void(0);" title="<?=$this->postOptions['delete'] ?? 'Delete'?>" onclick="if(confirm('Подтвердите удаление')) delItem(this,'<?=$this->postOptions['type']?>',<?=$item->id;?>, '<?=($isPost ? 'post' : 'term')?>');">удалить</span></a>]
+						[
+							<form method="POST" action="<?=route($this->postOptions['type'] . ($isPost ? '.' : '.term_') . 'destroy', $item->id)?>" class="inline termdel">
+								<button style="color: red;" class="but-as-link" title="<?=$this->postOptions['delete'] ?? 'Delete'?>" onclick="return confirm('Подтвердите удаление')">удалить</button>
+							</form>
+						]
 					</div>
 				</td>
 				<?php
@@ -239,6 +244,8 @@ class Post extends Model
 			$post['terms'] = $this->getTermList(array_keys($this->postOptions['taxonomy']));
 			$post['terms'] = $this->hierarchyItems($post['terms']);
 		}
+		
+		$post['__model'] = $this;
 		
 		$post['extra_fields_list'] = $this->getExtraFieldsOptions();
 		
@@ -397,22 +404,28 @@ class Post extends Model
 	// public function addTerm($name, $term, $slug = '', $description = '', $parent = 0)
 	public function addTerm($fields)
 	{
+		// dump($fields);
+		$fields = textSanitize($fields);
+		// dd($fields);
 		if ($this->checkTermDuplicate($fields['taxonomy'], $fields['slug'])) {
-			$errors[] = "Duplicate term for <b>{$this->postOptions['type']}</b> taxonomy: <b>{$fields['taxonomy']}</b>";
+			$errors[] = "Duplicate term '<b>{$fields['slug']}</b>' for <b>{$this->postOptions['type']}</b> taxonomy: <b>{$fields['taxonomy']}</b>";
 		}
 		
-		if ($fields['parent'] != 0 && $this->checkTermParentexists($fields['parent'])) {
+		if ($fields['parent'] != "0" && !$this->checkTermParentExists($fields['parent'])) {
 			$errors[] = "Parent is Invalid";
 		}
 		
 		if (isset($errors)) {
-			Session::flash('flash_errors', $errors);
-			redir(url()->previous(), 302);
+			rdr(':back', 302, $errors);
 		}
 		
 		if ($term = Term::create($fields)) {
 			Taxonomy::create(array_merge($fields, ['term_id' => $term->id, 'count' => 0]));
+			
+			return $term->id;
 		}
+		
+		return false;
 	}
 	
 	private function checkTermDuplicate($taxonomy, $slug)
@@ -420,35 +433,9 @@ class Post extends Model
 		return selectRow('Select t.id from terms t, term_taxonomy tt where t.id = tt.term_id and tt.taxonomy = ? and t.slug = ?', [$taxonomy, $slug]);
 	}
 	
-	private function checkTermParentexists($parent)
+	private function checkTermParentExists($parent)
 	{
 		return selectOne('Select t.id from terms t, term_taxonomy tt where t.id = tt.term_id and t.id = ?', [$parent]);
-	}
-	
-	public function addTermHelper($name, $term, $whisper = false, $slug = '', $description = '', $parent = 0){//dd(func_get_args());
-		// Checking on duplicate term for this taxonomy
-		$duplicate = DB::select('Select t.id from terms t, term_taxonomy tt where t.id = tt.term_id and t.slug = ? and tt.taxonomy = ?', [$name, $term]);
-		
-		if($duplicate){
-			return false;
-		}
-		
-		if($parent){
-			$parent = DB::select('Select t.id from terms t, term_taxonomy tt where t.id = tt.term_id and t.id = ?', $parent);
-		
-			if(!$parent){
-				return false;
-			}
-			$parent = $parent[0];
-		}else{
-			$parent = 0;
-		}
-		
-		
-		// Add new term and taxonomy
-		if (DB::insert('INSERT INTO terms (name, slug) VALUES (?, ?)', $name, $slug ?: $name)) {
-			DB::insert('INSERT INTO term_taxonomy (term_id, taxonomy, description, parent) VALUES (?, ?, ?, ?)', DB::getPdo()->lastInsertId(), $term, $description, $parent);
-		}
 	}
 	
 	public function addTermForm($term)

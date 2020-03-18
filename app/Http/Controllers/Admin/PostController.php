@@ -10,7 +10,7 @@ use Illuminate\Validation\Rule;
 use App\Traits\Helper;
 use App\Helpers\{PostsTypes, Arr, Pagination};
 use App\Admin\Post;
-use App\Term;
+use App\{Term, Taxonomy, Relationship};
 
 class PostController extends Controller
 {
@@ -107,7 +107,6 @@ class PostController extends Controller
 	
 	public function actionDashboard()
 	{
-		d(\Session::all());
 		return view('index');
 	}
 	
@@ -133,12 +132,6 @@ class PostController extends Controller
 		return view('terms.index', ['taxonomy' => $_GET['taxonomy'], 'terms' => $this->model->termList($_GET['taxonomy'])]);
 	}
 	
-	public function actionTermEdit($id)
-	{
-		$data = $this->model->editTermForm($id);
-		return view('terms.edit', compact('data'));
-	}
-	
 	public function actionTermCreate()
 	{
 		if (!isset($_GET['taxonomy'])) {
@@ -149,26 +142,34 @@ class PostController extends Controller
 		return view('terms.create', compact('data'));
 	}
 	
+	public function actionTermEdit($id)
+	{
+		$data = $this->model->editTermForm($id);
+		return view('terms.edit', compact('data'));
+	}
+	
 	public function actionTermStore(Request $request)
 	{
 		$this->termValidate($request);
 		
-		if (!PostsTypes::checkTaxonomyValid($request->get('taxonomy'))) {
-			return redirect($this->route('term_create'));
-		}
-		
 		$this->model->addTerm($request->all());
 		
-		return redirect($this->route('term_index'));
+		return redirect($this->route('term_index') . '?taxonomy=' . $request->get('taxonomy'));
 	}
+	
 	
 	public function actionTermUpdate(Request $request)
 	{
-		d($request->all());
+		// dd($request->all(), Taxonomy::find($request->get('parent')));
 		$term = Term::find($request->get('id'));
 		$term->fill($request->all());
-		dd($term);
-		$this->termValidate($request);
+		$term->save();
+		
+		Taxonomy::where('term_id', $term->id)
+				->where('parent', '<>', $request->get('parent'))
+				->update(['parent' => $request->get('parent')]);
+		
+		return $this->goTerms($request);
 	}
 	
 	private function termValidate(Request $request)
@@ -179,6 +180,23 @@ class PostController extends Controller
 			'slug' => 'required',
 			'parent' => 'required|integer',
 		]);
+		
+		if (!PostsTypes::checkTaxonomyValid($request->get('taxonomy'))) {
+			rdr();
+		}
+	}
+	
+	public function actionTermDestroy(Request $request, int $id)
+	{
+		// dd($request->all());
+		if ($term = Term::find($id)) {
+			$taxonomy = Taxonomy::select('term_taxonomy_id')->where('term_id', $term->id)->first();
+			Taxonomy::where('parent', $taxonomy->term_taxonomy_id)->update(['parent' => 0]);
+			$taxonomy->delete();
+			$term->delete();
+		}
+		
+		return $this->goTerms($request);
 	}
 	
 	private function route($name)
@@ -218,15 +236,13 @@ class PostController extends Controller
 		redir(route($this->options['type'] . '.index'));
 	}
 	
-	
-	
-	
-	
-	
-	
-	
 	private function goHome()
 	{
 		return redirect()->route($this->postOptions['type'] . '.index');
+	}
+	
+	private function goTerms($request)
+	{
+		return redirect($this->route('term_index') . '?taxonomy=' . $request->get('taxonomy'));
 	}
 }

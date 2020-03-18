@@ -2,8 +2,7 @@
 
 @section('content')
 <?php  
-//var_dump(get_defined_vars());exit;
-//var_dump($options, $data);exit;
+// d(get_defined_vars(), $app);
 if(isset($_GET['msg']))
 	echo "<h3 style='padding: 10px;background: lightgreen;'>{$_GET['msg']}</h3>";
 $post['listForParents1'] = $data['listForParents'];
