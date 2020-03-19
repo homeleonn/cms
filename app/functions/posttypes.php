@@ -29,13 +29,13 @@ addPageType('post', [
 				'delete' => 'Удалить категорию',
 				'hierarchical' => false,
 			],
-			// 'age' => [
-				// 'title' => 'Возрастная категория',
-				// 'add' => 'Добавить возрастную категорию',
-				// 'edit' => 'Редактировать возрастную категорию',
-				// 'delete' => 'Удалить возрастную категорию',
-				// 'hierarchical' => true,
-			// ],
+			'tag' => [
+				'title' => 'Тег',
+				'add' => 'Добавить тег',
+				'edit' => 'Редактировать тег',
+				'delete' => 'Удалить тег',
+				'hierarchical' => true,
+			],
 		],
 		'rewrite' => ['slug' => 'blog/%category%', 'with_front' => false, 'paged' => 20],
 ]);

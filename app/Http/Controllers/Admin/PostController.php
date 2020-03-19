@@ -8,9 +8,11 @@ use App\Http\Controllers\Controller;
 use Validator;
 use Illuminate\Validation\Rule;
 use App\Traits\Helper;
-use App\Helpers\{PostsTypes, Arr, Pagination};
-use App\Admin\Post;
+use App\Helpers\{PostsTypes, Arr, Pagination, Transliteration};
+use App\Admin\{Post, Media};
 use App\{Term, Taxonomy, Relationship};
+use DB;
+use Options;
 
 class PostController extends Controller
 {
@@ -20,7 +22,6 @@ class PostController extends Controller
 	
 	public function __construct(Request $request)
 	{
-		// dd($request->route()->getAction());
 		if ($request->route() && isset($request->route()->getAction()['as'])) {
 			PostsTypes::setCurrentType(explode('.', $request->route()->getAction()['as'])[0]);
 			$this->model = new Post;
@@ -30,30 +31,77 @@ class PostController extends Controller
 	
 	public function actionIndex()
 	{
-		// dd($this->model->list1());
 		$posts = $this->model->list();
-		$postOptions = $this->postOptions;
-		return view('posts.index', compact('posts', 'postOptions'));
+		return view('posts.index', compact('posts'));
 	}
 
 	
 	public function actionCreate()
 	{
 		$post = $this->model->getCreateData();
-		
 		return view('posts.create', compact('post'));
 	}
 
 	
 	public function actionStore(Request $request)
 	{
-		dd($request->all());
-		// $post_type = 'page';
+		// Need transaction
+		d($request->all());
+		
+		
+		$request->merge(['slug' => Transliteration::run($request->get('title'))]);
+		$request->request->add(['post_type' => $this->postOptions['type']]);
+		
 		
 		$request->validate([
-			'title' => 'required'
+			'title' => 'required',
+			// 'slug' => 'required|unique:posts, slug, null, id, post_type,' . $this->postOptions['type']
 		]);
-		$request->request->add(['post_type' => 'test']);
+		
+		if (DB::select('Select count(*) as count from posts where slug = ? and post_type = ?', [
+			$request->get('slug'), 
+			$request->get('post_type')
+		])[0]->count) {
+			redirBack('Duplicate post with this slug and post type');
+		}
+		
+		$request->merge(textSanitize($request->only(['title', 'short_title'])));
+		$request->merge(textSanitize($request->only(['content']), 'content'));
+		
+		
+		$terms = null;
+		if ($request->get('terms')) {
+			PostsTypes::checkTaxonomyExists(array_keys($request->get('terms')), true);
+			$receivedTerms 		= $request->get('terms');
+			$receivedTermsIds 	= Arr::getValuesRecursive($receivedTerms);
+			// $terms = Term::find($receivedTermsIds);
+			$terms = DB::table('terms')->select('id')->whereIn('id', $receivedTermsIds)->get();
+			
+			if (count($receivedTermsIds) != count($terms)) {
+				redirBack('Ошибка таксономии');
+			}
+			
+			
+		}
+		
+		
+		
+		$media = null;
+		$imgKey = Options::get('_img');
+		if ($img = $request->get($imgKey)) {
+			if (!$media = Media::find($img)) {
+				redirBack('Ошибка медиа');
+			} else {
+				$media = Postmeta::firstOrCreate(
+					['post_id' => '', 'meta_key' => $imgKey],
+					['delayed' => 1, 'arrival_time' => '11:30']
+				);
+				// Add post img to post meta
+			}
+		}
+		
+		dd($request->all(), $receivedTermsIds, $terms, count($terms), $img, $media);
+		
 		// dd($request->input('slug'));
 		// dd(\DB::select('Select count(*) as count from posts where slug = ? and post_type = ?', [$slug, '1'])[0]->count);
 
@@ -63,13 +111,6 @@ class PostController extends Controller
 		return $this->goHome();
 	}
 
-	
-	public function actionShow($id)
-	{
-		//
-	}
-
-	
 	public function actionEdit($id)
 	{
 		$post 			= $this->model->getEditData($id);
@@ -112,11 +153,6 @@ class PostController extends Controller
 	
 	
 	
-	
-	
-	
-	
-	
 	// TERMS
 	
 	public function actionTermIndex()
@@ -150,8 +186,8 @@ class PostController extends Controller
 	
 	public function actionTermStore(Request $request)
 	{
+		$request->merge(textSanitize($request->all()));
 		$this->termValidate($request);
-		
 		$this->model->addTerm($request->all());
 		
 		return redirect($this->route('term_index') . '?taxonomy=' . $request->get('taxonomy'));
@@ -160,28 +196,38 @@ class PostController extends Controller
 	
 	public function actionTermUpdate(Request $request)
 	{
-		// dd($request->all(), Taxonomy::find($request->get('parent')));
+		$request->merge(textSanitize($request->all()));
+		$this->termValidate($request, true);
+		
 		$term = Term::find($request->get('id'));
 		$term->fill($request->all());
 		$term->save();
 		
 		Taxonomy::where('term_id', $term->id)
-				->where('parent', '<>', $request->get('parent'))
-				->update(['parent' => $request->get('parent')]);
+					->update([
+						'description' 	=> $request->get('description') ?? '',
+						'parent' 		=> $request->get('parent')
+					]);
 		
 		return $this->goTerms($request);
 	}
 	
-	private function termValidate(Request $request)
+	private function termValidate(Request $request, $update = null)
 	{
-		$request->validate([
-			'taxonomy' => 'required',	
-			'name' => 'required',
-			'slug' => 'required',
-			'parent' => 'required|integer',
-		]);
+		$verifyFields = [
+			'taxonomy' 	=> 'required',	
+			'name' 		=> 'required',
+			'slug' 		=> 'required',
+			'parent' 	=> 'required|integer',
+		];
 		
-		if (!PostsTypes::checkTaxonomyValid($request->get('taxonomy'))) {
+		if ($update) {
+			$verifyFields['id'] = 'required|exists:terms';
+		}
+		
+		$request->validate($verifyFields);
+		
+		if (!PostsTypes::checkTaxonomyExists($request->get('taxonomy'))) {
 			rdr();
 		}
 	}

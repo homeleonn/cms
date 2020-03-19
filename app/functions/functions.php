@@ -10,7 +10,7 @@ function vd($exit, ...$args){
 		echo '<div ',(isAdminSide() ? 'class="adminside"' : ''),'><small style="color: green;"><pre>',$trace['file'],':',$trace['line'],':</pre></small><pre>';
 	}
 	
-	call_user_func_array(!$exit ? 'dump' : 'dd', $args[0] ? [$args[0]]: [NULL]);
+	call_user_func_array(!$exit ? 'dump' : 'dd', $args[0] ? $args[0]: NULL);
 	echo '</pre></div>';
 }
 
@@ -259,23 +259,28 @@ function rdr($url = ':back', $code = 301, $with = null) {
 	throw new \Illuminate\Http\Exceptions\HttpResponseException(redirect($url, $code));
 }
 
-function redir($url, $code = 301)
+function redirBack($with = null) {
+	rdr(':back', 302, $with);
+}
+
+function redir($url, $code = 301, $with = null)
 {
+	return redirect(url()->previous())->with($with);
 	// throw new \Illuminate\Http\Exception\HttpResponseException(redirect($to));
-    try {
-        \App::abort($code, '', ['Location' => $url]);
-    } catch (\Exception $exception) {
-		$codes = [
-			301 => 'Moved Permanently',
-			302 => 'Found',
-		];
-			dd($exception);
+    // try {
+        // \App::abort($code, '', ['Location' => $url]);
+    // } catch (\Exception $exception) {
+		// $codes = [
+			// 301 => 'Moved Permanently',
+			// 302 => 'Found',
+		// ];
+			// dd($exception);
 			
-		doAction('before_redirect');
+		// doAction('before_redirect');
 		
-		header("HTTP/1.1 {$code} {$codes[$code]}");
-		header('Location:' . $url);
-		exit;
+		// header("HTTP/1.1 {$code} {$codes[$code]}");
+		// header('Location:' . $url);
+		// exit;
         // the blade compiler catches exceptions and rethrows them
         // as ErrorExceptions :(
         //
@@ -286,7 +291,7 @@ function redir($url, $code = 301)
         // restore_error_handler();
         // call_user_func($previousErrorHandler, $exception);
         // die;
-    }
+    // }
 }
 
 addAction('before_redirect', 'jump_beforeRedirect');
@@ -343,16 +348,16 @@ function routeType($name) {
 	return route(PostsTypes::get('type') . ".{$name}");
 }
 
-function textSanitize($contents, $type = null, $tagsOn = false) {
+function textSanitize($contents, $type = 'title', $tagsOn = false) {
 	$types = [
 		'all' => [
-			'from' 	=> ['<?php', '<?', '<%'],
+			'from' 	=> ['<?php', '<?', '<%', '?>'],
 			'to' 	=> ['']
 		],
-		'content' => [
-			'from' 	=> [],
-			'to' 	=> []
-		],
+		// 'content' => [
+			// 'from' 	=> [],
+			// 'to' 	=> []
+		// ],
 		'title' => [
 			'from' 	=> ['\'', '"'],
 			'to' 	=> ['’', '»']
@@ -383,3 +388,42 @@ function textSanitize($contents, $type = null, $tagsOn = false) {
 	return $contents;
 }
 
+function expandDumpOnKeyDown() {
+	?>
+	<script>
+		function $$_(callback){window.addEventListener('load', callback);}
+		
+		
+		
+		function $$$(){
+			var list = document.getElementsByTagName('samp');
+			
+			return function () {
+				// console.log(list[0].children);
+				for (var i = 0; i < list.length; i++) {
+					var children = list[i].children;
+					for (var j = 0; j < children.length; j++) {
+						if (children[j].className == 'sf-dump-ref sf-dump-toggle' || children[j].className == 'sf-dump-compact') {
+							children[j].click();
+						}
+					}
+				}
+			}
+			
+		}
+		
+		function $$$__init() {
+			$$_(() => {
+				let a = $$$();
+				// a();
+				document.addEventListener('keydown', function(event) {
+					if (event.code == 'KeyX' && (event.altKey)) {
+						a();
+					}
+				});
+			});
+		}
+		$$$__init();
+	</script>
+	<?php
+}

@@ -49,7 +49,7 @@
 var root = '/', 
 ajaxUrl = root + "admin/ajax/",
 postType = '{{$options["type"] ?? "false"}}',
-contents = ['content', 'description'],
+contents = ['content'], //, 'description'
 text, editor, tinymceInit = false,
 urlPattern = /^$/;
 

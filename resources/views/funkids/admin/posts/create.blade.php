@@ -21,7 +21,7 @@
 		<input type="hidden" name="id">
 		<div class="block1">
 			<div>Заголовок</div>
-			<div><input class="w100" type="text" name="title" id="title" placeholder="" value="{{ old('title') }}"></div>
+			<div><input class="w100" type="text" name="title" id="title" placeholder="" value="{{ old('title') ?? 'Привет!!№;%:?*()_-+=\\@#$%^&' }}"></div>
 		</div>
 		<div class="block1">
 			<div>Краткий заголовок <span class="icon-help-circled" title="хлебные крошки, меню. Если главный заголовок имеет небольшую длинну, данное поле можно не заполнять"></span></div>
@@ -29,7 +29,7 @@
 		</div>
 		<div class="block1">
 			<div>Текст</div>
-			<div id="editors"><textarea class="visual" name="content" id="content" value="" style="width: 100%;height: 600px;display: none; visibility:hidden;">{{ old('content') }}</textarea></div>
+			<div id="editors"><textarea class="visual" name="content" id="content" value="" style="width: 100%;height: 600px;display: none; visibility:hidden;">{{ old('content') ?? '<script>alert(1)</script>' }}</textarea></div>
 		</div>
 		<?php doAction('add_post_after', $post);?>
 		@include('posts.sidebar.comments')

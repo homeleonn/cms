@@ -73,14 +73,13 @@ if(!window.jQuery)
 				content = getContent();
 				c();
 			});
-		}, 1);
+		}, 1);	
 		
 		d();
 		$('[name="_seo_title"], #title').on('blur', d);
 		
 		b();
 		$desc.on('blur', b);
-		
 	});
 	
 	

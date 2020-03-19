@@ -13,6 +13,7 @@ use Options;
 class Post extends Model
 {
 	const TEMPLATE = '/^[ \t\/*#@]*Template:(.*)$/mi';
+	protected $fillable = ['title', 'slug', 'short_title', 'content'];
 	
 	public function relationship()
 	{
@@ -404,9 +405,8 @@ class Post extends Model
 	// public function addTerm($name, $term, $slug = '', $description = '', $parent = 0)
 	public function addTerm($fields)
 	{
-		// dump($fields);
 		$fields = textSanitize($fields);
-		// dd($fields);
+		
 		if ($this->checkTermDuplicate($fields['taxonomy'], $fields['slug'])) {
 			$errors[] = "Duplicate term '<b>{$fields['slug']}</b>' for <b>{$this->postOptions['type']}</b> taxonomy: <b>{$fields['taxonomy']}</b>";
 		}
@@ -418,8 +418,9 @@ class Post extends Model
 		if (isset($errors)) {
 			rdr(':back', 302, $errors);
 		}
-		
+		// dd($fields);
 		if ($term = Term::create($fields)) {
+			
 			Taxonomy::create(array_merge($fields, ['term_id' => $term->id, 'count' => 0]));
 			
 			return $term->id;

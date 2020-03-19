@@ -15,10 +15,10 @@ class ExpandDumpOnKeyDown
      */
     public function handle($request, Closure $next)
     {
-        $response = $next($request);
-		$content = $response->getContent();
-		ob_start();
-		?>
+        // $response = $next($request);
+		// $content = $response->getContent();
+		// ob_start();
+		/*
 		<script>
 			function $$(callback){window.addEventListener('load', callback);}
 			
@@ -49,9 +49,10 @@ class ExpandDumpOnKeyDown
 				
 			}
 		</script>
-		<?php
-		$data = ob_get_clean();
-		$response->setContent($content . $data);
-        return $response;
+		<?php*/
+		// $data = ob_get_clean();
+		// $response->setContent($content . $data);
+        // return $response;
+		return $next($request);
     }
 }

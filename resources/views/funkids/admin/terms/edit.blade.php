@@ -34,7 +34,7 @@ $post['listForParents1'] = $data['listForParents'];
 		
 		<div class="block1">
 			<div>Описание</div>
-			<div><textarea class="nonEditor" name="description" id="description" value="" style="width: 100%;height: 600px;"><?=$term->description?></textarea></div>
+			<div><textarea class="nonEditor" name="description" id="description" style="width: 100%;height: 600px;"><?=$term->description?></textarea></div>
 		</div>
 	</div>
 	<div id="sidebar-right" class="col-md-4">

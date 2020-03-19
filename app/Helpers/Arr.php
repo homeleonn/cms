@@ -180,4 +180,13 @@ class Arr{
 		
 		return $array;
 	}
+	
+	public static function getValuesRecursive($original)
+	{
+		array_walk_recursive($original, function ($value) use (&$destination) {
+			$destination[] = $value;
+		});
+		
+		return $destination;
+	}
 }

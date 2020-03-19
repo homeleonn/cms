@@ -209,11 +209,30 @@ function initTinymce(){
 	});
 }
 
+
+function getContent() {
+	var editor = localStorage.getItem('visual-editor');
+	
+	if (!editor) {
+		return false;
+	}
+	
+	return (editor == 2 ? $('textarea#simple-editor').val() : tinyMCE.get('content').getContent()).trim();
+}
+
+function setContent() {
+	
+}
+
+function cl(...args) {
+	console.log(new Error().stack.split("\n")[1]);
+	console.log(...args);
+}
+
 var validData = true;
 var filesUpload = [];
 var content = '';
 $(function(){
-	
 	$('form input#item-factory').click(function(){
 		var form = $(this).closest('form')[0];
 		var [act, type] = $(form).attr('id').split('-');
@@ -225,9 +244,16 @@ $(function(){
 		})
 	});
 	
-	$('.post-from-admin').submit(function() {
-		this.elements['content'].value = $('#editors span.active').attr('id') == 'visual' ? tinymce.get('content').getContent() : $('textarea#simple-editor').val();
+	$('.post-from-admin').submit(function(e) {
+		// e.preventDefault();
+		// this.elements['content'].value = getContent();
+		// cl(this.elements['content'], getContent());return;
+		if (this.elements['content']) {
+			this.elements['content'].value = getContent();
+		}
+			
 	});
+	
 	
 	
 	/*common checking inputs*/
@@ -290,11 +316,6 @@ $(function(){
 	
 });
 
-function getContent(){
-	var editor = localStorage.getItem('visual-editor');
-	if(!editor) return false;
-	return (editor == 2 ? $('textarea#simple-editor').val() : tinyMCE.get('content').getContent()).trim();
-}
 
 if($('#edit-url-init').length)
 	var editUrl = new EditUrl();
@@ -374,4 +395,8 @@ function addField(name, value) {
 	text.setAttribute("value", value);
 	
 	return text;
+}
+
+function isset(context, varname) {
+	typeof(context[varname]) === 'undefined';
 }

@@ -55,9 +55,31 @@ class PostsTypes
 		return $options['has_archive'] . ($options['has_archive'] ? '/' : '');
 	}
 	
-	public static function checkTaxonomyValid($taxonomy)
+	public static function checkTaxonomyExists($taxonomy, $redirect = false)
 	{
-		$current = self::getCurrent();
-		return isset($current['taxonomy']) && array_key_exists($taxonomy, $current['taxonomy']);
+		$exists = true;
+		
+		if (isset($current['taxonomy'])) {
+			$exists = false;
+		} else {
+			if (!is_array($taxonomy)) {
+				$taxonomy = [$taxonomy];
+			}
+			
+			$current = self::getCurrent();
+			
+			foreach ($taxonomy as $t) {
+				if (! isset($current['taxonomy'][$t])) {
+					$exists = false;
+					break;
+				}
+			}
+		}
+		
+		if (!$exists && $redirect) {
+			redirBack('Ошибка таксономии');
+		}
+		
+		return $exists;
 	}
 }

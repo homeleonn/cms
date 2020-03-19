@@ -29,4 +29,6 @@ return [
 
 	'cache_enable' => '',
 
+	'_img' => '_jmp_post_img',
+
 ];
