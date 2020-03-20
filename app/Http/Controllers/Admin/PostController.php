@@ -9,7 +9,7 @@ use Validator;
 use Illuminate\Validation\Rule;
 use App\Traits\Helper;
 use App\Helpers\{PostsTypes, Arr, Pagination, Transliteration};
-use App\Admin\{Post, Media};
+use App\Admin\{Post, Media, Test};
 use App\{Term, Taxonomy, Relationship};
 use DB;
 use Options;
@@ -41,74 +41,157 @@ class PostController extends Controller
 		$post = $this->model->getCreateData();
 		return view('posts.create', compact('post'));
 	}
+	
+	private function setSlug($slugField, $postType, $id = false)
+	{
+		$slug = Transliteration::run($slugField);
+		$post = Post::wherePost_type($postType);
+		
+		$args = [$slug, $postType];
+		if ($id) {
+			$id = ' and id != ?';
+			$args[] = $id;
+		} else {
+			$id = '';
+		}
+		
+		$previousSlug = $slug;
+		$attempts = 10;
+		
+		while ($attempts-- && selectOne("Select count(*) as count from posts where slug = ? and post_type = ? {$id} limit 1", $args)) {
+			$slug = preg_replace_callback('/(\d+)$/', function ($matches) {
+				return ++$matches[1];
+			}, $slug);
+			
+			if ($previousSlug === $slug) {
+				$slug .= '1';
+			}
+			
+			$args[0] = $slug;
+		}
+		
+		return $slug;
+	}
+	
+	private function inputProcessing($fields, $edit = false, $fieldNameForTranslit = 'title', $type = 'post')
+	{
+		if (!($fields['title'] ?? null)) {
+			$errors[] = 'Заголовок не должен быть пуст!';
+		}
+		
+		if ($edit) {
+			if (!isset($fields['id'])) {
+				RedirtBack();
+			}
+			
+			if (($id = $fields['id'] ?? null) && Post::find($id)) {
+				$errors[] = 'Данной записи не существует';
+			}
+		}
+		
+		if (($parent = $fields['parent'] ?? null) && $this->postOptions['hierarchical'] && !Post::find($parent)) {
+			$errors[] = 'Данного родителя не существует';
+		}
+		
+		if (isset($errors)) {
+			redirBack($errors);
+		}
+		
+		$post = [
+			'post_type'		=> $this->postOptions['type'],
+			'parent' 		=> $parent,
+			'title' 		=> textSanitize($fields['title']),
+			'short_title' 	=> textSanitize($fields['short_title'] ?? ''),
+			'content' 		=> textSanitize($fields['content'] ?? '', 'content'),
+			'slug' 			=> $this->setSlug($fields['title'], $this->postOptions['type'], $edit ? $fields['id'] : null),
+			'comment_status' => isset($fields['discussion']) ? 'open' : 'closed',
+		];
+		
+		if ($edit) {
+			$post['id'] = $id;
+		}
+		
+		$extraFields = $fields['extra_fileds'] ?? [];
+		
+		//fill extra fields
+		$extraFieldKeys = [];
+		$extraFieldKeys = \applyFilter('extra_fields_keys', $extraFieldKeys);
+		
+		if(!$extraFieldKeys || !is_array($extraFieldKeys)) $extraFieldKeys = [];
+		$extraFieldKeys = array_merge($extraFieldKeys, [
+			'_jmp_post_template', 
+			Options::get('_img'),
+		]);
+		
+		foreach($extraFieldKeys as $key){
+			if(isset($fields[$key]) && $fields[$key]){
+				$extraFields[$key] = $fields[$key];
+				unset($fields[$key]);
+			}
+		}
+		
+		return [$post, $extraFields];
+	}
 
 	
 	public function actionStore(Request $request)
 	{
-		// Need transaction
-		d($request->all());
+		$fields = request()->all();
+		[$fields, $extraFields] = $this->inputProcessing($fields);
 		
-		
-		$request->merge(['slug' => Transliteration::run($request->get('title'))]);
-		$request->request->add(['post_type' => $this->postOptions['type']]);
-		
-		
-		$request->validate([
-			'title' => 'required',
-			// 'slug' => 'required|unique:posts, slug, null, id, post_type,' . $this->postOptions['type']
-		]);
-		
-		if (DB::select('Select count(*) as count from posts where slug = ? and post_type = ?', [
-			$request->get('slug'), 
-			$request->get('post_type')
-		])[0]->count) {
-			redirBack('Duplicate post with this slug and post type');
-		}
-		
-		$request->merge(textSanitize($request->only(['title', 'short_title'])));
-		$request->merge(textSanitize($request->only(['content']), 'content'));
-		
-		
-		$terms = null;
-		if ($request->get('terms')) {
-			PostsTypes::checkTaxonomyExists(array_keys($request->get('terms')), true);
-			$receivedTerms 		= $request->get('terms');
+		if ($terms = request()->get('terms')) {
+			PostsTypes::checkTaxonomyExists(array_keys($terms), true);
+			$receivedTerms 		= $terms;
 			$receivedTermsIds 	= Arr::getValuesRecursive($receivedTerms);
-			// $terms = Term::find($receivedTermsIds);
+			
 			$terms = DB::table('terms')->select('id')->whereIn('id', $receivedTermsIds)->get();
 			
 			if (count($receivedTermsIds) != count($terms)) {
-				redirBack('Ошибка таксономии');
-			}
-			
-			
-		}
-		
-		
-		
-		$media = null;
-		$imgKey = Options::get('_img');
-		if ($img = $request->get($imgKey)) {
-			if (!$media = Media::find($img)) {
-				redirBack('Ошибка медиа');
-			} else {
-				$media = Postmeta::firstOrCreate(
-					['post_id' => '', 'meta_key' => $imgKey],
-					['delayed' => 1, 'arrival_time' => '11:30']
-				);
-				// Add post img to post meta
+				dd('Ошибка таксономии');
 			}
 		}
 		
-		dd($request->all(), $receivedTermsIds, $terms, count($terms), $img, $media);
+		if ($img = $request->get(Options::get('_img')) && !$media = Media::find($img)) {
+			redirBack('Ошибка медиа');
+		}
 		
-		// dd($request->input('slug'));
-		// dd(\DB::select('Select count(*) as count from posts where slug = ? and post_type = ?', [$slug, '1'])[0]->count);
-
-
-		// Post::create($request->all());
-
+		DB::beginTransaction();
+			$post = Post::create($fields);
+			
+			doAction('after_post_add', $fields);
+			$fields['id'] = $post->id;
+			
+			$this->insertMeta($post->id, $extraFields);
+			
+			if ($terms) {
+				$post->relationship()->attach($receivedTermsIds);
+			}
+		DB::commit();
+		
 		return $this->goHome();
+	}
+	
+	private function termsSync($postId, $termsIds)
+	{
+		
+	}
+	
+	private function insertMeta($postId, $fields)
+	{
+		$meta = [];
+		if (!empty($fields)) {
+			foreach ($fields as $key => $value) {
+				$meta[] = [
+					'post_id' 		=> $postId,
+					'meta_key' 		=> htmlspecialchars($key),
+					'meta_value' 	=> htmlspecialchars($value),
+				];
+			}
+		}
+		
+		if($meta) {
+			DB::table('postmeta')->insert($meta);
+		}
 	}
 
 	public function actionEdit($id)

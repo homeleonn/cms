@@ -13,37 +13,19 @@ use Options;
 class Post extends Model
 {
 	const TEMPLATE = '/^[ \t\/*#@]*Template:(.*)$/mi';
-	protected $fillable = ['title', 'slug', 'short_title', 'content'];
+	// protected $fillable = ['title', 'slug', 'short_title', 'content', 'post_type', 'comment_status', 'status', 'parent'];
+    protected $fillable = ['title', 'slug', 'short_title', 'content', 'post_type', 'parent', 'author', 'status', 'comment_status'];
+	private $taxonomy;
 	
 	public function relationship()
 	{
-		return $this->hasMany('App\Relationship', 'object_id', 'id');
+		return $this->belongsToMany('App\Relationship', 'term_relationships', 'object_id', 'term_taxonomy_id');
 	}
 	
-	public function __construct()
+	public function __construct(...$args)
 	{
+		parent::__construct(...$args);
 		$this->taxonomy = new \App\Taxonomy;
-		
-	}
-	
-	public function list1()
-	{
-		// $posts = $this->getAll();
-		// d($this->terms()->term_taxonomy_id);
-		$posts = $this->where('post_type', 'post')->with('relationship.taxonomy.terms')->get();
-		// dd($this->where('post_type', 'post')->with('relationship.taxonomy.terms')->get());
-		// dd($posts[0]->relationship[0]->taxonomy->terms);
-		foreach ($posts as $post) {
-			foreach ($post->relationship as $relation) {
-				foreach ($relation->taxonomy->terms as $term) {
-					d($relation->taxonomy->taxonomy . ' -> ' . $term->name);
-				}
-			}
-			// dd($post->relationship);
-			// d($post->relationship->taxonomy->terms->name);
-		}
-		dd($posts, 1);
-		return $posts;
 	}
 	
 	public function getAll()
@@ -75,8 +57,6 @@ class Post extends Model
 		$postsTable = $this->hierarchy($postsHierarchy, 'table');
 		// dd($postsTable);
 		return !$postsTable ? '' : '<table class="mytable posts '.$this->postOptions['type'].'" id="draggable"><tr align="center"><td>title/url</td>'.(($this->postOptions['taxonomy'] ?? false) ? '<td width="15%">Метки</td>' : '').'<td width="1%">Дата публикации</td></tr>' . $postsTable . '</table>';
-		
-		
 	}
 	
 	public function getTermsByPostsId($ids)
@@ -171,21 +151,24 @@ class Post extends Model
 	private function hierarchyListHtml($item, $level, $urlHierarchy)
 	{
 		// d($item);
-		$isPost = !isset($item->taxonomy);
+		$isPost = !isset($item->term_taxonomy_id);
 		$buildLinkFlag = false;
 		if($isPost && !$this->postOptions['hierarchical']){
 			if(!empty($terms = Arr::itemsOnKeys($this->_allTerms, ['id', 'parent']))){
 				list($termsOnId, $termsOnParent) = $terms;
-				$termsByPostId = $this->_postTerms['_terms'][$item->id];
-				$permalink 	 = url('/') . '/' . trim($this->postOptions['rewrite']['slug'], '/') . '/' . $item->slug . '/';
-				$item->slug = applyFilter('postTypeLink', $permalink, $termsOnId, $termsOnParent, $termsByPostId);
-				$buildLinkFlag = true;
+				if (isset($this->_postTerms['_terms'][$item->id])) {
+					$termsByPostId = $this->_postTerms['_terms'][$item->id];
+					$permalink 	 = url('/') . '/' . trim($this->postOptions['rewrite']['slug'], '/') . '/' . $item->slug . '/';
+					$item->slug = applyFilter('postTypeLink', $permalink, $termsOnId, $termsOnParent, $termsByPostId);
+					$buildLinkFlag = true;
+				}
 			}
 		}
-		if($isPost){
+		
+		if ($isPost) {
 			//$url = $item->slug;
 			$url = ($this->postOptions['hierarchical'] ? '/' . $urlHierarchy . '/' . $this->postOptions['has_archive'] . $item->slug . '/' : ($buildLinkFlag ? $item->slug : '/' . $this->postOptions['has_archive'] . '/' . $item->slug . '/'));
-		}else{
+		} else {
 			$url = '/' . $this->postOptions['has_archive'] . '/' . $item->taxonomy . '/' . $urlHierarchy . $item->slug . '/' ;
 		}
 		// dd($item, $url);
@@ -210,22 +193,31 @@ class Post extends Model
 					</div>
 				</td>
 				<?php
-					if(isset($this->postOptions['taxonomy']) && $isPost){
-						if(!isset($item->_terms)) echo '<td></td>';
-						else{
+					if (isset($this->postOptions['taxonomy']) && $isPost) {
+						if (!isset($item->_terms)) {
+							//echo '<td></td>';
+						} else {
 							$activeTaxonomy = array_keys($this->postOptions['taxonomy']);
 							$termLinks = '';
+							
 							echo '<td>';
-							foreach($item->_terms as $term){
-								if(!in_array($term->taxonomy, $activeTaxonomy)) continue;
+							
+							foreach ($item->_terms as $term) {
+								if (!in_array($term->taxonomy, $activeTaxonomy)) {
+									continue;
+								}
+								
 								$termLinks .= '<a href="'. url('/') . '/' . preg_replace('~%.*%~', $term->taxonomy, $this->postOptions['rewrite']['slug']) . '/' . $term->slug . '/">'.$term->name.'</a>, ';
 							}
+							
 							echo substr($termLinks, 0, -2) . '</td>';
 						}
 					}
+					
 					if (isset($item->add_keys)) {
-						foreach($item->add_keys as $value)
+						foreach ($item->add_keys as $value) {
 							echo '<td>'.$value.'</td>';
+						}
 					}
 				?>
 				<td><?=($isPost ? $item->created_at : $item->count);?></td>

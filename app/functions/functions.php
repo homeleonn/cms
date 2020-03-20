@@ -348,7 +348,8 @@ function routeType($name) {
 	return route(PostsTypes::get('type') . ".{$name}");
 }
 
-function textSanitize($contents, $type = 'title', $tagsOn = false) {
+function textSanitize($content, $type = 'title', $tagsOn = false) {
+	if ($content == '') return '';
 	$types = [
 		'all' => [
 			'from' 	=> ['<?php', '<?', '<%', '?>'],
@@ -364,14 +365,14 @@ function textSanitize($contents, $type = 'title', $tagsOn = false) {
 		],
 	];
 	
-	if (!is_array($contents)) {
-		$contents = [$contents];
-	}
+	// if (!is_array($contents)) {
+		// $contents = [$contents];
+	// }
 	
-	foreach ($contents as &$content) {
-		if (!is_string($content)) {
-			continue;
-		}
+	// foreach ($contents as &$content) {
+		// if (!is_string($content)) {
+			// continue;
+		// }
 		
 		$content = str_replace($types['all']['from'], $types['all']['to'], trim($content));
 		$content = preg_replace('/\s+/', ' ', $content);
@@ -383,9 +384,9 @@ function textSanitize($contents, $type = 'title', $tagsOn = false) {
 		if(!$tagsOn && !$type == 'content') {
 			$content = htmlspecialchars($content);
 		}
-	}
+	// }
 	
-	return $contents;
+	return $content;
 }
 
 function expandDumpOnKeyDown() {
