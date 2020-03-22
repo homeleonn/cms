@@ -229,6 +229,7 @@ function cl(...args) {
 	console.log(...args);
 }
 
+
 var validData = true;
 var filesUpload = [];
 var content = '';
@@ -251,8 +252,8 @@ $(function(){
 		if (this.elements['content']) {
 			this.elements['content'].value = getContent();
 		}
-			
 	});
+	
 	
 	
 	
@@ -349,7 +350,7 @@ function EditUrl(){
 		var newUrlValue = this.draftAchorEl.val();
 		var newUrl = !cancel ? (newUrlValue && urlPattern.test(newUrlValue) ? newUrlValue : this.anchorUrl) : this.anchorUrl;
 		this.achorEl.text(newUrl);
-		$('input[name="url"]').val(newUrl);
+		$('input[name="slug"]').val(newUrl);
 		this.urlEl.attr('href', this.urlEl.text());
 		$(this.urlEl).toggleClass('none');
 		$('#edit-url-init').toggleClass('none');

@@ -10,7 +10,7 @@ use Illuminate\Validation\Rule;
 use App\Traits\Helper;
 use App\Helpers\{PostsTypes, Arr, Pagination, Transliteration};
 use App\Admin\{Post, Media, Test};
-use App\{Term, Taxonomy, Relationship};
+use App\{Term, Taxonomy, Relationship, Postmeta};
 use DB;
 use Options;
 
@@ -44,19 +44,18 @@ class PostController extends Controller
 	
 	private function setSlug($slugField, $postType, $id = false)
 	{
-		$slug = Transliteration::run($slugField);
-		$post = Post::wherePost_type($postType);
+		$slug 			= Transliteration::run($slugField);
+		$post 			= Post::wherePost_type($postType);
+		$args 			= [$slug, $postType];
+		$previousSlug 	= $slug;
+		$attempts 		= 10;
 		
-		$args = [$slug, $postType];
 		if ($id) {
-			$id = ' and id != ?';
 			$args[] = $id;
+			$id = ' and id != ?';
 		} else {
 			$id = '';
 		}
-		
-		$previousSlug = $slug;
-		$attempts = 10;
 		
 		while ($attempts-- && selectOne("Select count(*) as count from posts where slug = ? and post_type = ? {$id} limit 1", $args)) {
 			$slug = preg_replace_callback('/(\d+)$/', function ($matches) {
@@ -76,15 +75,19 @@ class PostController extends Controller
 	private function inputProcessing($fields, $edit = false, $fieldNameForTranslit = 'title', $type = 'post')
 	{
 		if (!($fields['title'] ?? null)) {
-			$errors[] = 'Заголовок не должен быть пуст!';
+			$errors[] = 'Заголовок не должен быть пуст';
 		}
 		
 		if ($edit) {
 			if (!isset($fields['id'])) {
-				RedirtBack();
+				RedirBack();
 			}
 			
-			if (($id = $fields['id'] ?? null) && Post::find($id)) {
+			if (!isset($fields['slug'])) {
+				RedirBack('Псевдоним не должен быть пуст');
+			}
+			
+			if (($id = $fields['id'] ?? null) && !$postFromDB = Post::find($id)) {
 				$errors[] = 'Данной записи не существует';
 			}
 		}
@@ -103,7 +106,11 @@ class PostController extends Controller
 			'title' 		=> textSanitize($fields['title']),
 			'short_title' 	=> textSanitize($fields['short_title'] ?? ''),
 			'content' 		=> textSanitize($fields['content'] ?? '', 'content'),
-			'slug' 			=> $this->setSlug($fields['title'], $this->postOptions['type'], $edit ? $fields['id'] : null),
+			'slug' 			=> $this->setSlug(
+				$fields[$fieldNameForTranslit], 
+				$this->postOptions['type'], 
+				($edit ? $fields['id'] : null)
+			),
 			'comment_status' => isset($fields['discussion']) ? 'open' : 'closed',
 		];
 		
@@ -130,67 +137,141 @@ class PostController extends Controller
 			}
 		}
 		
-		return [$post, $extraFields];
+		return [$post, $extraFields, ($postFromDB ?? null)];
 	}
 
 	
-	public function actionStore(Request $request)
+	public function actionStore()
 	{
-		$fields = request()->all();
-		[$fields, $extraFields] = $this->inputProcessing($fields);
-		
-		if ($terms = request()->get('terms')) {
-			PostsTypes::checkTaxonomyExists(array_keys($terms), true);
-			$receivedTerms 		= $terms;
-			$receivedTermsIds 	= Arr::getValuesRecursive($receivedTerms);
-			
-			$terms = DB::table('terms')->select('id')->whereIn('id', $receivedTermsIds)->get();
-			
-			if (count($receivedTermsIds) != count($terms)) {
-				dd('Ошибка таксономии');
-			}
-		}
-		
-		if ($img = $request->get(Options::get('_img')) && !$media = Media::find($img)) {
-			redirBack('Ошибка медиа');
-		}
-		
-		DB::beginTransaction();
-			$post = Post::create($fields);
-			
-			doAction('after_post_add', $fields);
-			$fields['id'] = $post->id;
-			
-			$this->insertMeta($post->id, $extraFields);
-			
-			if ($terms) {
-				$post->relationship()->attach($receivedTermsIds);
-			}
-		DB::commit();
+		$this->postSave();
 		
 		return $this->goHome();
 	}
 	
-	private function termsSync($postId, $termsIds)
+	private function postSave($edit = false)
 	{
+		$fields 						= request()->all();
+		[$fields, $extraFields, $post] 	= $this->inputProcessing($fields, true, 'slug');
+		$receivedTermsIds 				= $this->checkReceivedTerms(request()->get('terms'));
 		
-	}
-	
-	private function insertMeta($postId, $fields)
-	{
-		$meta = [];
-		if (!empty($fields)) {
-			foreach ($fields as $key => $value) {
-				$meta[] = [
-					'post_id' 		=> $postId,
-					'meta_key' 		=> htmlspecialchars($key),
-					'meta_value' 	=> htmlspecialchars($value),
-				];
-			}
+		if ($img = request()->get(Options::get('_img')) && !$media = Media::find($img)) {
+			redirBack('Ошибка медиа');
 		}
 		
-		if($meta) {
-			DB::table('postmeta')->insert($meta);
+		DB::beginTransaction();
+			doAction('before_post_' . (!$edit ? 'add' : 'edit'), $fields, $extraFields);
+			
+			if ($edit) {
+				$post->fill($fields)->save();
+			} else {
+				$post = Post::create($fields);
+			}
+			
+			$this->{$edit ? 'updateMeta' : 'insertMeta'}($post->id, $extraFields);
+			
+			if ($receivedTermsIds) {
+				$post->relationship()->sync($receivedTermsIds);
+			}
+		DB::commit();
+		
+		return $post;
+	}
+	
+	private function metaFormatting($meta)
+	{
+		$newMeta = new stdClass();
+		
+		foreach ($meta as $m) {
+			$newMeta->{$m->meta_key} = $m->meta_value;
+		}
+		
+		return $newMeta;
+	}
+	
+	private function updateMeta($postId, $extraFields)
+	{
+		$postMeta = Postmeta::select('meta_key', 'meta_value')->find($postId);
+		
+		if ($postMeta) {
+			$postMeta = $this->metaFormatting($postMeta);
+		}
+		
+		if (!$extraFields) {
+			if ($postMeta) {
+				Postmeta::where('post_id', $id)->delete();
+			}
+		} else {
+			$extraFields = Arr::clearHtmlKeysValues($extraFields);
+			
+			if($postMeta){
+				// Обновить существующие, если пришли данные с такими же ключами, но другими значениями
+				$existingPostMetaKeys 	= array_keys($postMeta);
+				$updateConditions 		= '';
+				$placeholderValues 		= $updateKeys = [];
+				
+				foreach ($extraFields as $key => $value) {
+					if(in_array($key, $existingPostMetaKeys)) {
+						if ($value != $postMeta[$key]) {
+							$updateConditions .= "WHEN id = {$postId} AND meta_key = ? THEN ? ";
+							$updateKeys[] = $key;
+							array_push($placeholderValues, $key, $value);
+						}
+						unset($extraFields[$key], $postMeta[$key]);
+					}
+				}
+				
+				if ($updateConditions) {
+					$updateInKeysPlaceholders 	= Arr::replaceByPlaceholders($updateKeys);
+					$placeholderValues 			= array_merge($placeholderValues, $updateKeys);
+					
+					//Обновляем существующие записи, которые были изменены
+					DB::update("Update postmeta SET meta_value = CASE {$updateConditions} END WHERE post_id = {$postId} AND meta_key IN({$updateInKeysPlaceholders})", $placeholderValues);
+				}
+				
+				// Удалить существующие, ключи которых не пришли при редактировании
+				if (!empty($postMeta)) {
+					Pustmeta::where('post_id', $postId)->whereIn('meta_key', $postMeta)->delete();
+				}
+			}
+			
+			// Вставить пришедшие, ключи которых не были найдены в существующих
+			$this->insertMeta($extraFields, $postId);
+		}
+	}
+	
+	private function checkReceivedTerms($terms)
+	{
+		if (!$terms) {
+			return null;
+		}
+		
+		PostsTypes::checkTaxonomyExists(array_keys($terms), true);
+		$receivedTerms 		= $terms;
+		$receivedTermsIds 	= Arr::getValuesRecursive($receivedTerms);
+		
+		$terms = DB::table('terms')->select('id')->whereIn('id', $receivedTermsIds)->get();
+		
+		if (count($receivedTermsIds) != count($terms)) {
+			dd('Ошибка таксономии');
+		}
+		
+		return $receivedTermsIds;
+	}
+	
+	private function insertMeta($meta, $postId, $clear = true)
+	{
+		if (!empty($meta)) {
+			$metaFormatted = [];
+			
+			foreach ($meta as $key => $value) {
+				$metaFormatted[] = [
+					'post_id' 		=> $postId,
+					'meta_key' 		=> $clear ? $key   : htmlspecialchars($key),
+					'meta_value' 	=> $clear ? $value : htmlspecialchars($value),
+				];
+			}
+			
+			Postmeta::insert($metaFormatted);
 		}
 	}
 
@@ -207,18 +288,7 @@ class PostController extends Controller
 	
 	public function actionUpdate(Request $request, $id)
 	{
-		$post = Post::find($id);
-		// dump($request->all());
-		$this->validate($request, [
-		    'url' => [
-		        Rule::unique('posts')->ignore($post->id),
-		    ],
-		    'post_type' => [
-		        Rule::unique('posts')->ignore($post->id),
-		    ],
-		]);
-
-		$post->fill($request->all())->save();
+		$this->postSave(true);
 		
 		return $this->goHome();
 	}
@@ -226,11 +296,21 @@ class PostController extends Controller
 	
 	public function actionDestroy($id)
 	{
-		//
+		DB::beginTransaction();
+			Post::findOrFail((int)$id)->delete();
+			Postmeta::wherePost_id($id)->delete();
+			Post::whereParent($id)->update(['parent' => 0]);
+			DB::update('Update term_taxonomy SET count = count - 1 where count > 0 and term_taxonomy_id IN(Select term_taxonomy_id from term_relationships where object_id = ?)', [$id]);
+			Relationship::whereObject_id($id)->delete();
+		DB::commit();
+		
+		return $this->goHome();
 	}
 	
 	public function actionDashboard()
 	{
+		// DB::beginTransaction();
+		// dd(Post::find(217)->fill(['slug' => '3333'])->save(), Post::create(['slug' => '4567']));
 		return view('index');
 	}
 	

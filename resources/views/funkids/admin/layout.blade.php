@@ -62,6 +62,12 @@ contents.forEach(function(item){
 	}
 });
 
+$('form.delitem').submit(function(e) {
+	this.prepend(addField('_token', '<?=csrf_token()?>'));
+	this.prepend(addField('_method', 'delete'));
+	this.prepend(addField('taxonomy', '<?=$_GET['taxonomy'] ?? ''?>'));
+});
+
 
 
 </script>

@@ -24,7 +24,7 @@
 	}}
 		<div id="center" class="col-md-8">
 			<input type="hidden" name="id" id="post_id" value="<?=$post['id']?>">
-			<input type="hidden" name="url" value="<?=$post['slug']?>">
+			<input type="hidden" name="slug" value="<?=$post['slug']?>">
 			<div class="block1">
 				<div>Заголовок</div>
 				<div><input class="w100" value="<?=$post['title']?>" type="text" name="title" id="title" placeholder=""></div>
@@ -53,7 +53,7 @@
 		<div id="sidebar-right" class="col-md-4">
 			<br><br><span class="icon-calendar"></span> Добавлено: <?=$post['created_at']?>
 			<br><span class="icon-pencil"></span> Последнее редактирование: <?=$post['updated_at']?>
-			<br><br><input type="button" id="item-factory" value="Редактировать">
+			<br><br><input type="submit" id="item-factory" value="Редактировать">
 				
 			@include('posts.sidebar.categoriesAndTags')
 			@include('posts.sidebar.listForParents')

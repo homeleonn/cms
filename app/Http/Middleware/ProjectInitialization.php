@@ -15,13 +15,17 @@ class ProjectInitialization
      */
     public function handle($request, Closure $next)
     {
-		if ($cache = getCache()) {
-			return response($cache);
+		if (\Options::get('cache_enable')) {
+			if ($cache = getCache()) {
+				return response($cache);
+			}
+			
+			$response = $next($request);
+			
+			setCache($response->getContent());
+		} else {
+			$response = $next($request);
 		}
-		
-		$response = $next($request);
-		
-		setCache($response->getContent());
 		
 		return $response;
     }

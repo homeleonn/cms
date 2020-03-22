@@ -52,25 +52,24 @@ class PostController extends Controller
 	public function actionSingle($slug, $id = null)
 	{
 		if ($id) {
-			if (!$post = Post::find($id)) abort(404);
-			
-			$this->run($post->post_type);
-			$post->getMeta(true);
-			return viewWrap($this->getTemplate('single'), $post)->with('post', $post);
+			$post = Post::findOrFail($id);
 		} else {
 			$hierarchy 	= explode('/', $slug);
 			$slug 		= array_pop($hierarchy); // get last url part
 			
-			if (!$post = Post::where(['slug' => $slug])->first()) abort(404);
-			
-			$this->run($post->post_type);
-			$post->getMeta(true);
-			
-			// If this post is the front
-			if ($this->checkFrontPageAliase($post['id'])) {
-				return viewWrap($this->getTemplate('single'), $post)->with('post', $post);
+			if (!$post = Post::whereSlug($slug)->first()) {
+				abort(404);
 			}
-			
+		}
+		$this->run($post->post_type);
+		$post->getMeta(true);
+		
+		// If this post is the front
+		if ($this->checkFrontPageAliase($post['id'])) {
+			return viewWrap($this->getTemplate('single'), $post)->with('post', $post);
+		}
+		
+		if ($hierarchy) {
 			// If type of this post related taxonomy
 			if (!$this->postOptions['hierarchical']) {
 				$post = $this->taxonomyPost($post);
@@ -84,6 +83,7 @@ class PostController extends Controller
 				}
 			}
 		}
+		
 		$this->createBreadCrumbs($post);
 		$post = applyFilter('before_return_post', $post);
 		return viewWrap($this->getTemplate('single'), $post)->with('post', $post);
@@ -95,8 +95,10 @@ class PostController extends Controller
 			if(url('/') != urlWithoutParams()) {
 				redir(url('/'));
 			}
+			
 			return true;
 		}
+		
 		return false;
 	}
 	
@@ -156,9 +158,10 @@ class PostController extends Controller
 	
 	private function getParentHierarchy($parentId, $items, $compare)
 	{
-		foreach($items as $item){
+		foreach ($items as $item) {
 			$itemsOnId[$item->id] = $item;
 		}
+		
 		$hierarchy = $this->setHierarchy($itemsOnId, $parentId, $compare);
 		$hierarchy = implode('/', array_reverse(explode('|', substr($hierarchy, 0, -1))));
 		return $hierarchy;
@@ -169,10 +172,13 @@ class PostController extends Controller
 		if (!isset($items[$parentId])) {
 			return false;
 		}
+		
 		$hierarchy = $items[$parentId][$compare] . '|';
+		
 		if (isset($items[$parentId]['parent']) && $items[$parentId]['parent']) {
 			$hierarchy .= $this->setHierarchy($items, $items[$parentId]['parent'], $compare);
 		}
+		
 		return $hierarchy;
 	}
 	
@@ -188,17 +194,22 @@ class PostController extends Controller
 	private function taxonomyPost($post)
 	{
 		if (empty($this->postOptions['taxonomy'])) {
-			$termsOnId = $termsOnParent = $postTerms = [];$post['terms'] = NULL;
+			$termsOnId = $termsOnParent = $postTerms = [];
+			$post['terms'] = NULL;
 		} else {
 			// Get terms by post taxonomies
 			$terms = $this->model->taxonomy->getByTaxonomies(); 
+			[$termsOnId, $termsOnParent] 	= Arr::itemsOnKeys($terms, ['id', 'parent']);
 			
 			// Получим термины относящиеся к данной записи, которые привязаны к таксономиям данного типа записи
-			$postTerms 						= $this->model->getPostTerms($post['id'], array_keys($this->postOptions['taxonomy']));
-			[$termsOnId, $termsOnParent] 	= Arr::itemsOnKeys($terms, ['id', 'parent']);
-			$post['termsHtml'] 			 	= Arr::termsHTML($this->postTermsLink($termsOnId, $termsOnParent, $postTerms), $this->postOptions['has_archive']);
+			$postTerms = $this->model->getPostTerms($post['id'], array_keys($this->postOptions['taxonomy']));
 			
-			$post['terms'] = $postTerms;
+			if (count($postTerms)) {
+				$post['termsHtml'] 			 	= Arr::termsHTML($this->postTermsLink($termsOnId, $termsOnParent, $postTerms), $this->postOptions['has_archive']);
+				$post['terms'] = $postTerms;
+			} else {
+				$postTerms = [];
+			}
 		}
 		
 		// Сформируем полную ссылку на пост, учитывая иерархию терминов к которым принадлежит запись
@@ -208,6 +219,7 @@ class PostController extends Controller
 		if(url()->current() != $post['permalink']){
 			redir($post['permalink']);
 		}
+		
 		return $post;
 	}
 	
@@ -406,8 +418,6 @@ class PostController extends Controller
 		
 		return $resArgs;
 	}
-	
-	
 	
 	
 	public function postPermalink(&$post, $termsOnId, $termsOnParent, $termsByPostId, $slug = false)

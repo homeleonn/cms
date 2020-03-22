@@ -186,7 +186,7 @@ class Post extends Model
 						[<a href="#">свойства</a>]
 						[<?=sprintf($edit, 'изменить');?>]
 						[
-							<form method="POST" action="<?=route($this->postOptions['type'] . ($isPost ? '.' : '.term_') . 'destroy', $item->id)?>" class="inline termdel">
+							<form method="POST" action="<?=route($this->postOptions['type'] . ($isPost ? '.' : '.term_') . 'destroy', $item->id)?>" class="inline delitem">
 								<button style="color: red;" class="but-as-link" title="<?=$this->postOptions['delete'] ?? 'Delete'?>" onclick="return confirm('Подтвердите удаление')">удалить</button>
 							</form>
 						]

@@ -39,13 +39,11 @@ function cache_path(){
 }
 
 function setCache($data){
-	if (Options::get('cache_enable')) {
-		file_put_contents(cache_path(), $data);
-	}
+	file_put_contents(cache_path(), $data);
 }
 
 function getCache(){
-	if (Options::get('cache_enable') && file_exists(cache_path())) {
+	if (file_exists(cache_path())) {
 		return file_get_contents(cache_path());
 	}
 	return false;
@@ -326,6 +324,15 @@ function myPostTypeLink($link, $termsOnId, $termsOnParent, $postTerms)
 	}
 
 	return preg_replace($replaceFormat, $formatComponent, $link);
+}
+
+function _q() {
+	$bt = _backtrace();
+	dd($bt);
+}
+
+function _backtrace() {
+	return debug_backtrace(null, 3)[2];
 }
 
 function selectOne(string $query, array $args = null) {

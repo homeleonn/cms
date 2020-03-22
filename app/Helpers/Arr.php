@@ -189,4 +189,28 @@ class Arr{
 		
 		return $destination;
 	}
+	
+	
+	public static function clearHtmlKeysValues($fields)
+	{
+		if (!is_array($fields)) {
+			$fields = [$fields];
+		}
+		
+		foreach ($fields as $key => $field) {
+			$fields[htmlspecialchars($key)] = htmlspecialchars($field);
+		}
+		
+		return $fields;
+	}
+	
+	
+	public static function replaceByPlaceholders($count)
+	{
+		if (is_array($count)) {
+			$count = count($count);
+		}
+		
+		return rtrim(str_repeat("'?',", $count), ',');
+	}
 }

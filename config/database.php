@@ -63,13 +63,26 @@ return [
 			// ],
         ],
 
-        'pgsql' => [
+        // 'pgsql' => [
+            // 'driver' => 'pgsql',
+            // 'host' => env('DB_HOST', '127.0.0.1'),
+            // 'port' => env('DB_PORT', '5432'),
+            // 'database' => env('DB_DATABASE', 'forge'),
+            // 'username' => env('DB_USERNAME', 'forge'),
+            // 'password' => env('DB_PASSWORD', ''),
+            // 'charset' => 'utf8',
+            // 'prefix' => '',
+            // 'schema' => 'public',
+            // 'sslmode' => 'prefer',
+        // ],
+		
+		 'pgsql' => [
             'driver' => 'pgsql',
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '5432'),
-            'database' => env('DB_DATABASE', 'forge'),
-            'username' => env('DB_USERNAME', 'forge'),
-            'password' => env('DB_PASSWORD', ''),
+            'host' => $_ENV['DB_HOST'],
+            'port' => $_ENV['DB_PORT'],
+            'database' => $_ENV['DB_DATABASE'],
+            'username' => $_ENV['DB_USERNAME'],
+            'password' => $_ENV['DB_PASSWORD'],
             'charset' => 'utf8',
             'prefix' => '',
             'schema' => 'public',
