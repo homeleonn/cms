@@ -470,9 +470,12 @@ class Post extends Model
 	
 	public function mergeMeta($post, $mod = false)
 	{
-		if(!$meta = \App\PostMeta::where('post_id', $post->id)->get()) {
+		if (!$meta = \App\PostMeta::where('post_id', $post->id)->get()) {
 			return $post;
 		}
+		
+		$metadata = [];
+		
 		foreach ($meta as $m) {
 			if ($mod && $m['meta_key'] == '_jmp_post_img') {
 				$media 						= Media::find($m['meta_value']);
@@ -482,8 +485,11 @@ class Post extends Model
 			}
 			$post[$m['meta_key']] = $m['meta_value'];
 			if (mb_substr($m['meta_key'], 0, 1) == '_') continue;
-			$post->meta_data[$m['meta_key']] = $m['meta_value'];
+			$metadata[$m['meta_key']] = $m['meta_value'];
 		}
+		
+		$post->meta_data = $metadata;
+		
 		return $post;
 	}
 	

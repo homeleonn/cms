@@ -144,8 +144,9 @@ function chooseMediaThumb(el){
 }
 
 function mediaDelete(){
+	// cl($('[name="_token"]')[0].value);return;
 	var id = $('.media-thumb.chosen > img').data('id');
-	$.post(root +'admin/media/del/' + id + '/');
+	$.post(root +'admin/media/del/' + id + '/', {_token:$('[name="_token"]')[0].value});
 	$('.media-thumb.chosen').remove();
 	$('#media-original-show').addClass('none').children('img').attr('src', '');
 	$('#wrap-media').removeClass('col-md-4');

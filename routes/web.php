@@ -26,7 +26,11 @@ if (isAdminSide() || !isset($_SERVER['REQUEST_URI'])) {
 		
 		Route::get('changeOrder/{orderType}', 'PostController@actionChangeOrder')->name('changeOrder');
 		Route::post('changeOrderValue', 'PostController@actionChangeOrderValue')->name('changeOrderValue');
-		Route::get('media', 'MediaController@actionIndex')->name('media.index');
+		
+		Route::get('media/{async?}', 'MediaController@actionIndex')->name('media.index');
+		Route::post('media/add/', 'MediaController@actionAdd')->name('media.add');
+		Route::post('media/del/{id}', 'MediaController@actionDel')->name('media.add');
+		
 		Route::get('plugins', 'PluginController@actionIndex')->name('plugin.index');
 		Route::get('plugins/settings/{pluginFoler}', 'PluginController@actionSettings')->name('plugin.index')->where('pluginFoler', '(.*)(/(.*))?');
 		

@@ -51,7 +51,7 @@ ajaxUrl = root + "admin/ajax/",
 postType = '{{$options["type"] ?? "false"}}',
 contents = ['content'], //, 'description'
 text, editor, tinymceInit = false,
-urlPattern = /^$/;
+urlPattern = /^<?=URL_PATTERN?>$/;
 
 contents.forEach(function(item){
 	var item = 'textarea#' + item;

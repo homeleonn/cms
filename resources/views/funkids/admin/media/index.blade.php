@@ -1,11 +1,12 @@
-@extends('layout')
+@extends(!$data['async'] ? 'layout' : 'blank-layout')
 <?php
 
-//var_dump(get_defined_vars());
-// var_dump($data);
+// dd(get_defined_vars());
+// d($data);
 ?>
 @section('content')
 <form method="POST" enctype="multipart/form-data">
+	<?=csrf_field();?>
 	<label>
 		<span class="icon-plus add-img green s18">
 			<input class="none-impt" multiple type="file" accept="image/jpeg,image/png,image/gif" id="upload-img">
@@ -43,4 +44,8 @@
 		</div>
 	</div>
 </div>
-@endsection
+@if (!$data['async'])
+	@endsection
+@else
+	@show
+@endif

@@ -348,7 +348,7 @@ function selectOne(string $query, array $args = null) {
 
 function selectRow(string $query, array $args = null) {
 	$result = !$args ? DB::select($query) : DB::select($query, $args);
-	return $result[0] ?? null;
+	return (array)$result[0] ?? null;
 }
 
 function routeType($name) {
@@ -433,5 +433,24 @@ function expandDumpOnKeyDown() {
 		}
 		$$$__init();
 	</script>
+	<?php
+}
+
+function getExtraField($index, $name, $value){
+	?>
+	<div class="field mtop10">
+		<div class="row">
+			<div class="col-md-4">
+				<input type="text" class="extra_name w100" value="<?=$name?>">
+				<div class="mtop10">
+					<input class="extra_field_delete" data-extra_index="<?=$index?>" type="button" value="Удалить">
+					<input class="extra_field_update" data-extra_index="<?=$index?>" type="button" value="Обновить">
+				</div>
+			</div>
+			<div class="col-md-8">
+				<textarea name="extra_fileds[<?=$name?>]" class="w100" rows="2"><?=$value?></textarea>
+			</div>
+		</div>
+	</div>
 	<?php
 }

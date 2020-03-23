@@ -3,12 +3,11 @@
 @section('content')
 	@include('layouts.errors')
 	
-	<h1>post edit</h1>
 	<?php  
-		//dd(get_defined_vars());
+		// dd(get_defined_vars());
 		// echo doAction('admin_post_options_form');
 	?>
-	<h1>{{$postOptions['add'] ?? $postOptions['title']}} edit</h1>
+	<h1>{{$postOptions['add'] ?? $postOptions['title'] . ' edit'}}</h1>
 	<a href="{{ route($postOptions['type'] . '.create') }}" class="action-tool plus" title="Добавить">
 		<span class="icon-plus">Добавить</span>
 	</a>
@@ -53,7 +52,7 @@
 		<div id="sidebar-right" class="col-md-4">
 			<br><br><span class="icon-calendar"></span> Добавлено: <?=$post['created_at']?>
 			<br><span class="icon-pencil"></span> Последнее редактирование: <?=$post['updated_at']?>
-			<br><br><input type="submit" id="item-factory" value="Редактировать">
+			<br><br><input type="submit" value="Редактировать">
 				
 			@include('posts.sidebar.categoriesAndTags')
 			@include('posts.sidebar.listForParents')

@@ -211,6 +211,6 @@ class Arr{
 			$count = count($count);
 		}
 		
-		return rtrim(str_repeat("'?',", $count), ',');
+		return rtrim(str_repeat("?,", $count), ',');
 	}
 }

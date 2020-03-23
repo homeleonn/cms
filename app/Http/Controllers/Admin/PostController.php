@@ -151,10 +151,10 @@ class PostController extends Controller
 	private function postSave($edit = false)
 	{
 		$fields 						= request()->all();
-		[$fields, $extraFields, $post] 	= $this->inputProcessing($fields, true, 'slug');
+		[$fields, $extraFields, $post] 	= $this->inputProcessing($fields, $edit,  $edit ? 'slug' : 'title');
 		$receivedTermsIds 				= $this->checkReceivedTerms(request()->get('terms'));
 		
-		if ($img = request()->get(Options::get('_img')) && !$media = Media::find($img)) {
+		if (($img = request()->get(Options::get('_img'))) && !$media = Media::find($img)) {
 			redirBack('Ошибка медиа');
 		}
 		
@@ -179,10 +179,12 @@ class PostController extends Controller
 	
 	private function metaFormatting($meta)
 	{
-		$newMeta = new stdClass();
+		// $newMeta = new \stdClass();
+		$newMeta = [];
 		
 		foreach ($meta as $m) {
-			$newMeta->{$m->meta_key} = $m->meta_value;
+			$newMeta[$m->meta_key] = $m->meta_value;
+			// $newMeta[$m['meta_key']] = $m['meta_value'];
 		}
 		
 		return $newMeta;
@@ -190,7 +192,7 @@ class PostController extends Controller
 	
 	private function updateMeta($postId, $extraFields)
 	{
-		$postMeta = Postmeta::select('meta_key', 'meta_value')->find($postId);
+		$postMeta = Postmeta::select('meta_key', 'meta_value')->where('post_id', $postId)->get();
 		
 		if ($postMeta) {
 			$postMeta = $this->metaFormatting($postMeta);
@@ -212,7 +214,7 @@ class PostController extends Controller
 				foreach ($extraFields as $key => $value) {
 					if(in_array($key, $existingPostMetaKeys)) {
 						if ($value != $postMeta[$key]) {
-							$updateConditions .= "WHEN id = {$postId} AND meta_key = ? THEN ? ";
+							$updateConditions .= "WHEN post_id = {$postId} AND meta_key = ? THEN ? ";
 							$updateKeys[] = $key;
 							array_push($placeholderValues, $key, $value);
 						}
@@ -230,12 +232,12 @@ class PostController extends Controller
 				
 				// Удалить существующие, ключи которых не пришли при редактировании
 				if (!empty($postMeta)) {
-					Pustmeta::where('post_id', $postId)->whereIn('meta_key', $postMeta)->delete();
+					Postmeta::where('post_id', $postId)->whereIn('meta_key', $postMeta)->delete();
 				}
 			}
 			
 			// Вставить пришедшие, ключи которых не были найдены в существующих
-			$this->insertMeta($extraFields, $postId);
+			$this->insertMeta($postId, $extraFields);
 		}
 	}
 	
@@ -258,7 +260,7 @@ class PostController extends Controller
 		return $receivedTermsIds;
 	}
 	
-	private function insertMeta($meta, $postId, $clear = true)
+	private function insertMeta($postId, $meta, $clear = true)
 	{
 		if (!empty($meta)) {
 			$metaFormatted = [];
@@ -309,6 +311,7 @@ class PostController extends Controller
 	
 	public function actionDashboard()
 	{
+		// dd(opcache_get_status());
 		// DB::beginTransaction();
 		// dd(Post::find(217)->fill(['slug' => '3333'])->save(), Post::create(['slug' => '4567']));
 		return view('index');

@@ -5,15 +5,21 @@ namespace App\Http\Controllers\Admin;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Admin\Media;
+use App\Helpers\Uploader;
+use App\Helpers\Msg;
+use DB;
 
 class MediaController extends Controller
 {
 	public function actionIndex($async = false)
 	{
-		$data['media'] = Media::all();
+		// dd($async);
+		$data['media'] = Media::orderBy('id', 'desc')->get();
 		$data['title'] = 'Медиа';
+		$data['async'] = $async;
+		
 		return view('media.index', compact('data'));
-		dd($data);
+		
 		if($async === 'async'){
 			$this->view->render('media/show', $data, false);
 		}else{
@@ -25,8 +31,8 @@ class MediaController extends Controller
 		if(!isset($_FILES['files'])) return 0;
 		$files = $_FILES['files'];
 		$upDir = date('Y/m', time()) . '/';
-		$dir = UPLOADS_DIR . $upDir;
-		$urlDir = UPLOADS . $upDir;
+		$dir = uploads_path() . $upDir;
+		$urlDir = uploads_url() . $upDir;
 		$uploader = new Uploader($dir);
 		$thumbW = 150;
 		$thumbH = 150;
@@ -60,7 +66,7 @@ class MediaController extends Controller
 					$thumbSrcList[$i]['thumb'] = $urlDir . $uploader->thumbCut($result['new_src'], $result['mime'], $result['w'], $result['h'], $thumbW, $thumbH);
 					
 					$meta['sizes']['thumbnail'] = [
-						'file' => addPrefix($result['new_name'], "-{$thumbW}x{$thumbH}"),
+						'file' => self::addPrefix($result['new_name'], "-{$thumbW}x{$thumbH}"),
 						'width' => $thumbW,
 						'height' => $thumbH,
 						'mime' => $result['mime'],
@@ -83,12 +89,11 @@ class MediaController extends Controller
 				$metaForMediaShow = $meta;
 				unset($metaForMediaShow['sizes']['thumbnail']);
 				$thumbSrcList[$i]['meta'] = json_encode($metaForMediaShow);
-				$thumbSrcList[$i]['dir'] = UPLOADS . $meta['dir'];
+				$thumbSrcList[$i]['dir'] = uploads_url() . $meta['dir'];
 				
 				$meta = serialize($meta);
 				
-				$filesData = array_map([$this->db, 'escapeString'], [$files['name'][$i], $files['type'][$i]]);
-				$insert[] = "('{$src}', {$filesData[0]}, {$filesData[1]}, '{$meta}')";
+				$insert[] = [$src, $files['name'][$i], $files['type'][$i], $meta];
 			}
 			
 			$i++;
@@ -96,16 +101,20 @@ class MediaController extends Controller
 			if($i > 50) break;
 		}
 		
-		if(!empty($insert)){
+		if (!empty($insert)) {
 			$i = 0;
-			$this->db->query('LOCK TABLE media WRITE');
 			
-			foreach($insert as $ins){
-				$this->model->insert($ins);
-				$thumbSrcList[$i++]['id'] = $this->db->insertId();
-			}
+			DB::raw('LOCK TABLE media WRITE');
+				DB::beginTransaction();
+					
+					foreach($insert as $ins){
+						DB::insert('INSERT INTO media (src, name, mime, meta) VALUES (?,?,?,?)', $ins);
+						$thumbSrcList[$i++]['id'] = DB::getPdo()->lastInsertId();
+					}
+					
+				DB::commit();
+			DB::raw('UNLOCK TABLES');
 			
-			$this->db->query('UNLOCK TABLES');
 			Msg::json(['thumbSrcList' => $thumbSrcList]);
 		}
 	}
@@ -126,7 +135,7 @@ class MediaController extends Controller
 			$newH = $destH;
 		}
 		
-		$destName = addPrefix($source, "-{$newW}x{$newH}");
+		$destName = self::addPrefix($source, "-{$newW}x{$newH}");
 		
 		$image_p = imagecreatetruecolor($newW, $newH);
 		$imgType = explode('/', $sizes['mime'])[1];
@@ -152,11 +161,12 @@ class MediaController extends Controller
 		return [$destName, $newW, $newH];
 	}
 	
-	public function actionDel($id){
-		$media = $this->db->getRow('Select * from media where id = ?i', (int)$id);
+	public function actionDel($id)
+	{
+		$media = selectRow('Select * from media where id = ?', [(int)$id]);
 		
 		if($media){
-			$src = UPLOADS_DIR . $media['src'];
+			$src = uploads_path() . $media['src'];
 			$meta = unserialize($media['meta']);
 			
 			$delMedia = [$src];
@@ -165,10 +175,15 @@ class MediaController extends Controller
 			if(isset($meta['sizes']['medium'])) 	$delMedia[] = $dir . $meta['sizes']['medium']['file'];
 			
 			array_map('unlink', $delMedia);
-			$this->db->query('Delete from media where id = ' . $media['id']);
-			$this->db->query('Delete from postmeta where meta_key = ?s and meta_value = ?i', '_jmp_post_img', $media['id']);
+			DB::delete('Delete from media where id = ?', [$media['id']]);
+			DB::delete('Delete from postmeta where meta_key = ? and meta_value = ?', ['_jmp_post_img', $media['id']]);
 		}
 		
 		exit;
+	}
+	
+	public static function addPrefix($string, $prefix, $delim = '.')
+	{
+		return str_replace($delim, $prefix . $delim, $string);
 	}
 }
