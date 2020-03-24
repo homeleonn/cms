@@ -4,7 +4,7 @@ namespace App\Admin;
 
 use Illuminate\Database\Eloquent\Model;
 
-use App\Helpers\{Arr};
+use App\Helpers\{Arr, PostsTypes};
 use App\{Term, Taxonomy, Relationships};
 use DB;
 use Session;
@@ -275,6 +275,10 @@ class Post extends Model
 	
 	public function listForParents($posts = NULL, $parent = NULL, $onlyData = false)
 	{
+		if (!isset($this->postOptions)) {
+			$this->postOptions = PostsTypes::get(null, 'page');
+		}
+		
 		if (!$posts) {
 			$posts = $this->getAllPosts(['id', 'parent', 'title', 'short_title', 'slug']);
 		}
@@ -289,7 +293,7 @@ class Post extends Model
 	}
 	
 	private function htmlSelectForParentHierarchy($hierarchyList){
-		return '<select style="width: 100%;" name="parent"><option value="0">(нет родительской)</option>' . $hierarchyList . '</select>';
+		return '<select  autocomplete="off" style="width: 100%;" name="parent"><option value="0">(нет родительской)</option>' . $hierarchyList . '</select>';
 	}
 	
 	

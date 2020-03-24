@@ -396,6 +396,12 @@ function textSanitize($content, $type = 'title', $tagsOn = false) {
 	return $content;
 }
 
+function clearCache($cacheFileName){
+	if(is_file($cacheFileName = uploads_path() . 'cache/' . $cacheFileName . '.html')){
+		unlink($cacheFileName);
+	}
+}
+
 function expandDumpOnKeyDown() {
 	?>
 	<script>

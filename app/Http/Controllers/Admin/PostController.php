@@ -311,6 +311,7 @@ class PostController extends Controller
 	
 	public function actionDashboard()
 	{
+		// dd(Post::select('id'));
 		// dd(opcache_get_status());
 		// DB::beginTransaction();
 		// dd(Post::find(217)->fill(['slug' => '3333'])->save(), Post::create(['slug' => '4567']));

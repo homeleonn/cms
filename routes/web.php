@@ -29,7 +29,10 @@ if (isAdminSide() || !isset($_SERVER['REQUEST_URI'])) {
 		
 		Route::get('media/{async?}', 'MediaController@actionIndex')->name('media.index');
 		Route::post('media/add/', 'MediaController@actionAdd')->name('media.add');
-		Route::post('media/del/{id}', 'MediaController@actionDel')->name('media.add');
+		Route::post('media/del/{id}', 'MediaController@actionDel')->name('media.del');
+		
+		Route::get('settings', 'SettingController@actionIndex')->name('settings.index');
+		Route::post('settings/save', 'SettingController@actionSave')->name('settings.save');
 		
 		Route::get('plugins', 'PluginController@actionIndex')->name('plugin.index');
 		Route::get('plugins/settings/{pluginFoler}', 'PluginController@actionSettings')->name('plugin.index')->where('pluginFoler', '(.*)(/(.*))?');
