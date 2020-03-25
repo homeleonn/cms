@@ -245,19 +245,19 @@ function redir1($url, $code = 301){
 	exit;
 }
 
-function rdr($url = ':back', $code = 301, $with = null) {
+function rdr($url = ':back', $code = 301, $with = null, $messageKey = 'flash_errors') {
 	if ($url == ':back') {
 		$url = url()->previous();
 	}
 	
 	if ($with) {
-		\Session::flash('flash_errors', is_array($with) ? $with : [$with]);
+		\Session::flash($messageKey, is_array($with) ? $with : [$with]);
 	}
 	
 	throw new \Illuminate\Http\Exceptions\HttpResponseException(redirect($url, $code));
 }
 
-function redirBack($with = null) {
+function redirBack($with = null, $messageKey = 'flash_errors') {
 	rdr(':back', 302, $with);
 }
 
@@ -322,7 +322,8 @@ function myPostTypeLink($link, $termsOnId, $termsOnParent, $postTerms)
 			$current->$mergeKey . '|' . Arr::builtHierarchyUp($termsOnParent, $current, $postTermsOnId, $mergeKey), 1, -1));
 		}
 	}
-
+// dd(preg_replace($replaceFormat, $formatComponent, $link));
+// dd($replaceFormat, $formatComponent, $link);
 	return preg_replace($replaceFormat, $formatComponent, $link);
 }
 

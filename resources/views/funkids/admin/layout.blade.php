@@ -12,6 +12,7 @@
 	<link rel="shortcut icon" type="image/x-icon" href="/admin_static/img/favicon.ico"/>
 	<script src="/admin_static/js/jq3.js"></script>
 	<script src="/admin_static/js/admin.js"></script>
+	<meta name="csrf-token" content="{{ csrf_token() }}" />
 </head>
 <body>
 <div id="wrapper">
@@ -71,9 +72,6 @@ $('form.delitem').submit(function(e) {
 
 
 </script>
-
-
-	
-<?php //doAction('admin_footer');?>
+<?php doAction('admin_footer');?>
 </body>
 </html>

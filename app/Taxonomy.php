@@ -72,14 +72,29 @@ class Taxonomy extends Model
 		return false;
 	}
 	
-	public function getAllByObjectsIds($objectsIds)
+	public function getAllByObjectsIds($objectsIds, $added = null)
+	{
+		return $this->relation()
+					->whereIn('tr.object_id', $objectsIds)
+					->get()->toArray();
+	}
+	
+	public function byObjectsIds($objectsIds, $added = null)
+	{
+		
+	}
+	
+	public function byTaxonomies($taxonomies, $added = null)
+	{
+		
+	}
+	
+	public function relation()
 	{
 		return DB::table('terms as t')
 					->join('term_taxonomy as tt', 		't.id', '=', 'tt.term_id')
 					->join('term_relationships as tr', 	'tt.term_taxonomy_id', '=', 'tr.term_taxonomy_id')
-					->select('t.*', 'tt.*', 'tr.object_id')
-					->whereIn('tr.object_id', $objectsIds)
-					->get()->toArray();
+					->select('t.*', 'tt.*', 'tr.object_id');
 	}
 	
 	public function getByTaxonomies($taxonomies = NULL)

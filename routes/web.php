@@ -34,6 +34,11 @@ if (isAdminSide() || !isset($_SERVER['REQUEST_URI'])) {
 		Route::get('settings', 'SettingController@actionIndex')->name('settings.index');
 		Route::post('settings/save', 'SettingController@actionSave')->name('settings.save');
 		
+		Route::match(['get', 'post'], 'menu', 'MenuController@actionIndex')->name('menu.index');
+		Route::post('menu/edit', 'MenuController@actionEdit')->name('menu.index');
+		Route::post('menu/select', 'MenuController@actionSelect')->name('menu.select');
+		Route::post('menu/activate', 'MenuController@actionActivate')->name('menu.activate');
+		
 		Route::get('plugins', 'PluginController@actionIndex')->name('plugin.index');
 		Route::get('plugins/settings/{pluginFoler}', 'PluginController@actionSettings')->name('plugin.index')->where('pluginFoler', '(.*)(/(.*))?');
 		

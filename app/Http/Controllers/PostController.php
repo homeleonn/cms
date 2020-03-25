@@ -11,17 +11,17 @@ use Options;
 
 class PostController extends Controller
 {
-	private $img 		= '_jmp_post_img';
-	private $launched 	= null;
-	private $template 	= null;
+	private $img;
+	private $launched;
+	private $template;
 	
 	public function run($type, $method = null, $args = null)
 	{
 		// dd(func_get_args(), get_defined_vars());
 		if ($this->launched) return;
 		$this->launched = true;
+		$this->img = Options::get('_img');
 		$this->model = new Post;
-		$this->model->taxonomy = new Taxonomy();
 		PostsTypes::setCurrentType($type);
 		$this->postOptions = $this->post = $this->model->postOptions = PostsTypes::getCurrent();
 		$this->breadcrumbs = [];

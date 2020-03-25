@@ -15,6 +15,13 @@ class Post extends Model
 	private $allItemsCount;
 	private $limit;
 	private $offSet = 0;
+	public $taxonomy;
+	
+	public function __construct(...$args)
+	{
+		parent::__construct(...$args);
+		$this->taxonomy = new \App\Taxonomy;
+	}
 	
 	public function single($slug, $id = NULL)
 	{

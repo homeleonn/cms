@@ -57,7 +57,7 @@ class PostController extends Controller
 			$id = '';
 		}
 		
-		while ($attempts-- && selectOne("Select count(*) as count from posts where slug = ? and post_type = ? {$id} limit 1", $args)) {
+		while ($attempts-- && selectOne("Select count(*) from posts where slug = ? and post_type = ? {$id} limit 1", $args)) {
 			$slug = preg_replace_callback('/(\d+)$/', function ($matches) {
 				return ++$matches[1];
 			}, $slug);

@@ -190,6 +190,19 @@ class Arr{
 		return $destination;
 	}
 	
+	public static function getKeys($array, $key, $distinct = false){
+		$k = [];
+		foreach($array as $a){
+			if($distinct){
+				if(!isset($k[$a[$key]]))
+					$k[$a[$key]] = $a[$key];
+			}
+			else
+				$k[] = $a[$key];
+		}
+		return $k;
+	}
+	
 	
 	public static function clearHtmlKeysValues($fields)
 	{

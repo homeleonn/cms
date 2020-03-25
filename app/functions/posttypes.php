@@ -70,7 +70,7 @@ addPageType('program', [
 		'common' => 'программ',
 		'hierarchical' => false,
 		'has_archive'  => 'programs',
-		'rewrite' => ['slug' => 'programs', 'with_front' => false, 'paged' => 5],
+		'rewrite' => ['slug' => 'programs', 'with_front' => false, 'paged' => 30],
 		// 'taxonomy' => [
 			// 'age' => [
 				// 'title' => 'Возрастная категория',
@@ -164,7 +164,6 @@ function addPageType(string $type, array $options){
 			Route::get($type, 'PostController@actionIndex')->name("{$type}.index");
 			Route::post($type, 'PostController@actionStore')->middleware('web')->name("{$type}.store");
 			Route::get($type.'/create', 'PostController@actionCreate')->name("{$type}.create");
-			// Route::get($type.'/{post}', 'PostController@actionShow')->name("{$type}.show");
 			Route::put($type.'/{post}', 'PostController@actionUpdate')->name("{$type}.update");
 			Route::delete($type.'/{post}', 'PostController@actionDestroy')->name("{$type}.destroy");
 			Route::get($type.'/{post}/edit', 'PostController@actionEdit')->name("{$type}.edit");
@@ -173,7 +172,6 @@ function addPageType(string $type, array $options){
 			Route::get($type . '/term', 'PostController@actionTermIndex')->name("{$type}.term_index");
 			Route::post($type . '/term', 'PostController@actionTermStore')->name("{$type}.term_store");
 			Route::get($type . '/create-term', 'PostController@actionTermCreate')->name("{$type}.term_create");
-			// Route::get($type . '/term/{term}', 'PostController@actionTermShow')->name("{$type}.term_show");
 			Route::put($type . '/term/{term}', 'PostController@actionTermUpdate')->name("{$type}.term_update");
 			Route::delete($type . '/term/{term}', 'PostController@actionTermDestroy')->name("{$type}.term_destroy");
 			Route::get($type . '/term/{term}/edit', 'PostController@actionTermEdit')->name("{$type}.term_edit");

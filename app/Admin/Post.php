@@ -15,7 +15,7 @@ class Post extends Model
 	const TEMPLATE = '/^[ \t\/*#@]*Template:(.*)$/mi';
 	// protected $fillable = ['title', 'slug', 'short_title', 'content', 'post_type', 'comment_status', 'status', 'parent'];
     protected $fillable = ['title', 'slug', 'short_title', 'content', 'post_type', 'parent', 'author', 'status', 'comment_status'];
-	private $taxonomy;
+	public $taxonomy;
 	
 	public function relationship()
 	{
