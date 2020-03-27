@@ -9,16 +9,35 @@ if (!function_exists('isAdminSide')) {
 	}
 }
 
+
+
+addPageType('page', [
+		'type' => 'page',
+		'title' => '',
+		'title_for_admin' => 'Страницы',
+		'description' => 'Страницы',
+		'add' => 'Добавить страницу',
+		'edit' => 'Редактировать страницу',
+		'delete' => 'Удалить страницу',
+		'common' => 'страниц',
+		'hierarchical' => true,
+		'has_archive'  => false,
+		'taxonomy' => [],
+		'rewrite' => ['slug' =>'', 'with_front' => true, 'paged' => false],
+]);
+
+
+
 addPageType('post', [
 		'type' => 'post',
 		'title' => 'Блог',
 		'h1' => 'Блог',
-		'title_for_admin' => 'Записи',
+		'title_for_admin' => 'Статьи',
 		'description' => 'Блог',
-		'add' => 'Добавить запись',
-		'edit' => 'Редактировать запись',
-		'delete' => 'Удалить запись',
-		'common' => 'записей',
+		'add' => 'Добавить статью',
+		'edit' => 'Редактировать статью',
+		'delete' => 'Удалить статью',
+		'common' => 'статей',
 		'hierarchical' => false,
 		'has_archive'  => 'blog',
 		'taxonomy' => [
@@ -38,23 +57,6 @@ addPageType('post', [
 			],
 		],
 		'rewrite' => ['slug' => 'blog/%category%', 'with_front' => false, 'paged' => 20],
-]);
-
-
-
-addPageType('page', [
-		'type' => 'page',
-		'title' => '',
-		'title_for_admin' => 'Страницы',
-		'description' => 'Страницы',
-		'add' => 'Добавить страницу',
-		'edit' => 'Редактировать страницу',
-		'delete' => 'Удалить страницу',
-		'common' => 'страниц',
-		'hierarchical' => true,
-		'has_archive'  => false,
-		'taxonomy' => [],
-		'rewrite' => ['slug' =>'', 'with_front' => true, 'paged' => false],
 ]);
 
 addPageType('program', [

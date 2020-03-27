@@ -42,6 +42,8 @@ if (isAdminSide() || !isset($_SERVER['REQUEST_URI'])) {
 		Route::get('plugins', 'PluginController@actionIndex')->name('plugin.index');
 		Route::get('plugins/settings/{pluginFoler}', 'PluginController@actionSettings')->name('plugin.index')->where('pluginFoler', '(.*)(/(.*))?');
 		
+		Route::post('user/clearcache/', 'SettingController@actionCacheClear')->name('cache.clear');
+		
 	});
 	
 }

@@ -263,13 +263,15 @@ class Post extends Model
 	private function htmlSelectForTemplateList($postTeplate = NULL)
 	{
 		$templateList = '';
-		foreach (glob(themeDir() . '*.php') as $themeFile) {
+		
+		foreach (glob(themeDir('front') . '*.php') as $themeFile) {
 			if (preg_match(self::TEMPLATE, file_get_contents($themeFile), $matches)) {
 				$templateFile = basename($themeFile);
-				$selected = $templateFile === $postTeplate ? ' selected' : '';
+				$selected = $templateFile === $postTeplate || $templateFile === ($postTeplate . '.blade.php') ? ' selected' : '';
 				$templateList .=  "<option value=\"{$templateFile}\"{$selected}>{$matches[1]}</option>";
 			}
 		}
+		
 		return !$templateList ? false : '<select style="width: 100%;" name="_jmp_post_template"><option value="0">(Базовый)</option>' . $templateList . '</select>';
 	}
 	

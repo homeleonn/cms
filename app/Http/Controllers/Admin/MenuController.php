@@ -70,9 +70,9 @@ class MenuController extends Controller{
 					$taxonomies = array_merge($taxonomies, $options['taxonomy']);
 				}
 				
-				if($options['hierarchical'])
+				if ($options['hierarchical']) {
 					$posts = $post->listForParents($posts, NULL, TRUE);
-				else{
+				} else {
 					$allPostIds 	= array_merge($allPostIds, Arr::getKeys($posts, 'id'));
 					$allTaxonomies 	= array_merge($allTaxonomies, array_keys($options['taxonomy'] ?? []));
 				}
@@ -144,7 +144,7 @@ class MenuController extends Controller{
 		DB::table('menu')->where('menu_id', $menuId)->delete();
 		Menu::insert($queryItems);
 		
-		if (file_exists($unlinkFile = themeDir() . '/uploads/cache/menu/menu.html')) {
+		if (file_exists($unlinkFile = themeDir() . 'uploads/cache/menu/menu.html')) {
 			unlink($unlinkFile);
 		}
 	}

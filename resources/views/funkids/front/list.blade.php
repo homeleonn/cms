@@ -100,7 +100,7 @@
 						</a>
 					</div>
 					<span>
-						{{ mb_substr($item->content, 0 ,500) . '...' }}
+						{{ strip_tags(mb_substr($item->content, 0 ,500)) . '...' }}
 					</span>
 					<div class="right"><a href="{{ $item->slug }}" class="button">Читать</a></div>
 				</div>

@@ -29,7 +29,7 @@
 			<div id="logo"><img src="/admin_static/img/jump.png"></div>
 		</div>
 	</header>
-	<?php include themeDir() . 'admin/dashboard.php'; ?>
+	<?php include themeDir() . 'dashboard.php'; ?>
 	<div id="content">
 		<?php //doAction('admin_head'); ?>
 		@yield('content')

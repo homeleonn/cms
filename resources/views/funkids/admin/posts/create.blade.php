@@ -29,7 +29,8 @@
 		</div>
 		<div class="block1">
 			<div>Текст</div>
-			<div id="editors"><textarea class="visual" name="content" id="content" value="" style="width: 100%;height: 600px;display: none; visibility:hidden;">{{ old('content') }}</textarea></div>
+			<input type="hidden" name="content" value="">
+			<div id="editors"><textarea class="visual" id="content" value="" style="width: 100%;height: 600px;display: none; visibility:hidden;">{{ old('content') }}</textarea></div>
 		</div>
 		<?php doAction('add_post_after', $post);?>
 		@include('posts.sidebar.comments')

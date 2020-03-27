@@ -1,10 +1,4 @@
 ;(function($){
-	$.ajaxSetup({
-		headers: {
-			'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-		}
-	});
-	
 	var error, success, currentItem, addExpand,
 	menuHandlerUrl = root + 'admin/menu/';
 	

@@ -91,7 +91,7 @@ echo '<script>var menuItems = $.parseJSON(\'' . json_encode($data['menuItems']) 
 			function menuRecursive($pages, $url = '', $level = 0){
 				foreach($pages as $page)
 				{
-					echo ' ', str_repeat('---', $level), ' <input type="checkbox" data-name="',$page['title'],'" data-url="', url('/'), $page['slug'],'" data-origname="',$page['title'],'" data-type="Страница" > <a href="',url('/'), $page['slug'],'/">',$page['title'],'</a>', "<br>\n";
+					echo ' ', str_repeat('---', $level), ' <input type="checkbox" data-name="',$page['title'],'" data-url="', url('/'), '/', $page['slug'],'/" data-origname="',$page['title'],'" data-type="Страница" > <a href="',url('/'), '/', $page['slug'],'/">',$page['title'],'</a>', "<br>\n";
 					
 					if(isset($page['children']))
 						menuRecursive($page['children'], $url . $page['slug'] . '/', $level + 1);

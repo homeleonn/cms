@@ -61,6 +61,7 @@ class PostController extends Controller
 				abort(404);
 			}
 		}
+		
 		$this->run($post->post_type);
 		$post->getMeta(true);
 		
@@ -69,18 +70,16 @@ class PostController extends Controller
 			return viewWrap($this->getTemplate('single'), $post)->with('post', $post);
 		}
 		
-		if ($hierarchy) {
-			// If type of this post related taxonomy
-			if (!$this->postOptions['hierarchical']) {
-				$post = $this->taxonomyPost($post);
-			} else { // If type of this post is hierarchical structure, check hierarchy
-				if (!empty($hierarchy)) {
-					if ($redirectResponce = $this->checkHierarchy($post['slug'], $post['parent'], $hierarchy)) {
-						return $redirectResponce;
-					}
-				} elseif ($post['parent']) {
-					abort(404);
+		// If type of this post related taxonomy
+		if (!$this->postOptions['hierarchical']) {
+			$post = $this->taxonomyPost($post);
+		} else { // If type of this post is hierarchical structure, check hierarchy
+			if (!empty($hierarchy)) {
+				if ($redirectResponce = $this->checkHierarchy($post['slug'], $post['parent'], $hierarchy)) {
+					return $redirectResponce;
 				}
+			} elseif ($post['parent']) {
+				abort(404);
 			}
 		}
 		
@@ -92,7 +91,7 @@ class PostController extends Controller
 	private function checkFrontPageAliase($postId)
 	{
 		if ($postId == Options::get('front_page')) {
-			if(url('/') != urlWithoutParams()) {
+			if(url('/') . '/' != urlWithoutParams()) {
 				redir(url('/'));
 			}
 			
@@ -205,7 +204,7 @@ class PostController extends Controller
 			$postTerms = $this->model->getPostTerms($post['id'], array_keys($this->postOptions['taxonomy']));
 			
 			if (count($postTerms)) {
-				$post['termsHtml'] 			 	= Arr::termsHTML($this->postTermsLink($termsOnId, $termsOnParent, $postTerms), $this->postOptions['has_archive']);
+				$post['termsHtml'] = Arr::termsHTML($this->postTermsLink($termsOnId, $termsOnParent, $postTerms), $this->postOptions['has_archive']);
 				$post['terms'] = $postTerms;
 			} else {
 				$postTerms = [];
@@ -235,7 +234,7 @@ class PostController extends Controller
 		unset($result);
 		
 		$this->setPermalinkAndTerms($list, $termsByPostsIds, $termsFromExistsPost);
-		$this->createFilters($termsByPostsIds);
+		$this->createFilters($allTerms);
 		$this->createBreadCrumbsForList($this->post, $taxonomy, $hierarchy, $termsByPostsIds, $tslug);
 		
 		$this->post['pagination'] 	= $this->pagination($page);
@@ -300,13 +299,23 @@ class PostController extends Controller
 		return Options::get('front_page') == $this->post->id;
 	}
 	
-	private function createFilters($termsByPostsIds)
+	private function createFilters($archiveTerms)
 	{
-		$archiveTerms = $termsByPostsIds[array_key_first($termsByPostsIds)];
+		
+		// dd($termsFromExistsPost);
+		// foreach ($termsFromExistsPost as $term) {
+			// if (!isset($archiveTerms1[$term->slug])) {
+				// $archiveTerms1[$term->slug] = false;
+				// $archiveTerms[] = $term;
+			// }
+		// } 
+		
+		// dd($archiveTerms);
+		// $archiveTerms = $termsByPostsIds[array_key_first($termsByPostsIds)];dd($archiveTerms);
 		if (!$archiveTerms) return;
 		[$termsOnId, $termsOnParent] = Arr::itemsOnKeys($archiveTerms, ['id', 'parent']);
 		$postTerms = $this->postTermsLink($termsOnId, $termsOnParent, $archiveTerms);
-		
+		// dd($postTerms);
 		if($postTerms) {
 			$this->post['filters'] = Arr::archiveTermsHTML(array_reverse($postTerms), $this->postOptions['has_archive']);
 		}
@@ -422,7 +431,8 @@ class PostController extends Controller
 	
 	public function postPermalink(&$post, $termsOnId, $termsOnParent, $termsByPostId, $slug = false)
 	{
-		$permalink 	 = url('/') . '/' . ($slug ?: ($this->postOptions['rewrite']['slug'] ? $this->postOptions['rewrite']['slug'] . '/' : '')) . $post->slug;
+		// dd($this->postOptions, $slug);
+		$permalink 	 = url('/') . '/' . ($slug ? $slug . '/' : ($this->postOptions['rewrite']['slug'] ? $this->postOptions['rewrite']['slug'] . '/' : '/')) . $post->slug;
 		$post->slug = $post->permalink = applyFilter('postTypeLink', $permalink, $termsOnId, $termsOnParent, $termsByPostId);
 	}
 	

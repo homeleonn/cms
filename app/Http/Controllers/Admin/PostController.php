@@ -150,6 +150,7 @@ class PostController extends Controller
 	
 	private function postSave($edit = false)
 	{
+		// dd(request()->all());
 		$fields 						= request()->all();
 		[$fields, $extraFields, $post] 	= $this->inputProcessing($fields, $edit,  $edit ? 'slug' : 'title');
 		$receivedTermsIds 				= $this->checkReceivedTerms(request()->get('terms'));

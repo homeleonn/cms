@@ -3,8 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<?php //jmpHead() ?>
-	<title>{{$post['title'] ?? 'funkids'}}</title>
+	<?php jmpHead($post ?? []) ?>
 	<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&subset=latin,cyrillic" rel="stylesheet" type="text/css">
 	<link rel="stylesheet" href="<?=theme_url()?>css/bootstrap.min.css">
 	<link rel="stylesheet" href="<?=theme_url()?>css/fontello.css">
@@ -50,27 +49,7 @@
 							<div class="phone-top"><span class="icon-phone"></span><span>Заказать обратный звонок</span></div>
 						</div>
 					</div>
-					<nav class="menu">
-						<label for="mobile-nav"><div></div></label>
-						<input type="checkbox" id="mobile-nav">
-						<ul class="menu"><li><a href="/">Главная</a></li>
-								<li class="top-menu">
-								<a href="/price/">Цены</a>			</li>		<li class="top-menu">
-								<a href="/reviews/">Отзывы</a>			</li>		<li class="top-menu">
-								<a href="/blog/">Блог</a>			</li>		<li class="top-menu">
-								<a href="/programs">programs</a>			</li>
-								<li class="top-menu">
-								<a href="/contacts">Контакты</a>			</li>
-							<li class="top-menu hidd extra-contacts">
-								<div>
-									<a href="tel:+380677979385">+38 (067) 797-93-85</a>
-									<a href="tel:+380632008595">+38 (063) 200-85-95</a>
-									Почта: <a href="mailto:funkids@mail">funkidssodessa@gmail.com</a>
-								</div>
-							</li>
-						</ul>
-					</nav>		
-					<?php //getMenu(); ?>
+					<?php getMenu(); ?>
 					<?php if(isMain()) doAction('header_after_menu', 'glavnii');?>
 				</div>
 			</div>

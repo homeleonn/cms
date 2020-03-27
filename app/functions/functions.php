@@ -205,7 +205,7 @@ function postImgSrc($post, $thumbnail = 'orig'){
 	if(in_array($thumbnail, $validKeys) && isset($post->_jmp_post_img_meta['sizes'][$thumbnail])){
 		return uploads_url() . substr($post->_jmp_post_img, 0, strrpos($post->_jmp_post_img, '/') + 1) . $post->_jmp_post_img_meta['sizes'][$thumbnail]['file'];
 	}
-	
+	// dd($post->_jmp_post_img);
 	return isset($post->_jmp_post_img) ? uploads_url() . $post->_jmp_post_img : theme_url() . 'img/logo_trnsprnt1.jpg';
 }
 
@@ -214,11 +214,17 @@ function theme_url(){
 	return url('/') . '/themes/' . Options::get('theme') . '/';
 }
 
-function themeDir(){
-	return resource_path('views/') . Options::get('theme') . '/';
+function themeDir($side = null){
+	if (!$side) {
+		$side = (isAdminSide() ? 'admin' : 'front');
+	} 
+	
+	return resource_path('views/') . Options::get('theme') . '/' . $side . '/';
 }
 
-
+function rootUri() {
+	return '/';
+}
 
 function urlWithoutParams(){
 	return url('/') . explode('?', $_SERVER['REQUEST_URI'])[0];
@@ -226,10 +232,93 @@ function urlWithoutParams(){
 
 function viewWrap($templateFileName, $post, $args = null){
 	if (isset($post['_jmp_post_template']) && $post['_jmp_post_template']) {
-		$templateFileName = $post['_jmp_post_template'];
+		$templateFileName = str_replace('.blade.php', '', $post['_jmp_post_template'], );
+	} elseif (isset($post['post_type']) && file_exists($filename = themeDir() . $post['post_type'] . '.blade.php')) {
+		$templateFileName = $post['post_type'];	
 	}
 	
 	return view($templateFileName, $args ?? []);
+}
+
+
+
+function jmpHead($post = null){
+	// global $post;
+	$post = applyFilter('jhead', $post);
+	if (!isset($post['title'])) {
+		$post['title'] = 'no title';
+	}
+echo <<<EOT
+<title>{$post['title']}</title>\n\t
+EOT;
+	doAction('jhead', $post);
+}
+
+function getMenu() {
+	// $cacheFileName = 'menu/menu';
+	// if(Common::getCache($cacheFileName, -1)) return;
+	
+	// $cats = DI::getD('db')->getAll('Select * from menu where menu_id = '.Common::getOption('menu_active_id').' ORDER BY sort, parent');
+	// $cats = DB::table('menu')->where('menu_id', \Options::get('menu_active_id'))->orderBy('sort, parent');
+	$cats = App\Admin\Menu::where('menu_id', \Options::get('menu_active_id'))->orderByRaw('sort, parent')->get();
+	// dd($cats);
+	if(!$cats) return;
+	
+	$newCats = array(
+		'cats' => array(),
+		'subCats' => array()
+	);
+	
+	/*формируем из все категорий - главные категории и подкатегории*/
+	foreach($cats as $cat){
+		if($cat['parent'] == -1)
+			$newCats['cats'][] = $cat;
+		else
+			$newCats['subCats'][$cat['parent']][] = $cat;
+	}
+	
+	/*Очищаем изначальные категории, которые были в перемешку*/
+	unset($cats);
+	
+	/*Начинаем выводить меню, первым пунктом статично поставим главную страницу*/
+	?>
+	<nav class="menu">
+		<label for="mobile-nav"><div></div></label>
+		<input type="checkbox" id="mobile-nav">
+		<ul class="menu"><li><a href="<?=rootUri()?>">Главная</a></li>
+	<?php
+	/*Пройдемся по всем главнм категориям*/
+	foreach($newCats['cats'] as $cat){
+		$issetSubMenu = isset($newCats['subCats'][$cat['object_id']]);
+		
+		/*Проходим по подкатегориям, сохраняя их для вывода*/
+		if($issetSubMenu){
+			$subCatsView = '';
+			foreach($newCats['subCats'][$cat['object_id']] as $subCat){
+				$currentSubCatUrl = strpos($subCat['url'], 'http') === 0 ? $subCat['url'] : rootUri() . "{$subCat['url']}/";
+				$subCatsView .= "<li><a href=\"{$currentSubCatUrl}\">{$subCat['name']}</a></li>";
+			}
+		}
+		
+		?>
+		<li class="top-menu">
+			<?php echo "<a href=\"".($issetSubMenu ? 'javascript:void(0);' : (strpos($cat['url'], 'http') === 0 ? $cat['url']:rootUri()."{$cat['url']}/"))."\">{$cat['name']}</a>";?>
+			<?php if(!$issetSubMenu) {echo '</li>'; continue;}?>
+			<ul class="submenu"><?=$subCatsView?></ul>
+		</li>
+		<?php
+	}
+	echo '
+	<li class="top-menu hidd extra-contacts">
+		<div>
+			<a href="tel:+380677979385">+38 (067) 797-93-85</a>
+			<a href="tel:+380632008595">+38 (063) 200-85-95</a>
+			Почта: <a href="mailto:funkids@mail">funkidssodessa@gmail.com</a>
+		</div>
+	</li>
+	</ul></nav>';
+	
+	// echo Common::setCache($cacheFileName);
 }
 
 function redir1($url, $code = 301){
@@ -263,7 +352,7 @@ function redirBack($with = null, $messageKey = 'flash_errors') {
 
 function redir($url, $code = 301, $with = null)
 {
-	return redirect(url()->previous())->with($with);
+	rdr($url, $code, $with);
 	// throw new \Illuminate\Http\Exception\HttpResponseException(redirect($to));
     // try {
         // \App::abort($code, '', ['Location' => $url]);
@@ -460,4 +549,14 @@ function getExtraField($index, $name, $value){
 		</div>
 	</div>
 	<?php
+}
+
+function do_rmdir($dir) {
+	if ($objs = glob($dir."/*")) {
+		foreach ($objs as $obj) {
+			is_dir($obj) ? do_rmdir($obj) : unlink($obj);
+		}
+	}
+	
+	rmdir($dir);
 }

@@ -192,14 +192,22 @@ class Arr{
 	
 	public static function getKeys($array, $key, $distinct = false){
 		$k = [];
-		foreach($array as $a){
-			if($distinct){
-				if(!isset($k[$a[$key]]))
-					$k[$a[$key]] = $a[$key];
+		
+		foreach ($array as $a) {
+			
+			if (!is_array($a)) {
+				$a = (array)$a;
 			}
-			else
+			
+			if ($distinct) {
+				if (!isset($k[$a[$key]])) {
+					$k[$a[$key]] = $a[$key];
+				}
+			} else {
 				$k[] = $a[$key];
+			}
 		}
+		
 		return $k;
 	}
 	

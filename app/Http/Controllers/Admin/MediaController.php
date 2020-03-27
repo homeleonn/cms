@@ -174,7 +174,12 @@ class MediaController extends Controller
 			if(isset($meta['sizes']['thumbnail'])) 	$delMedia[] = $dir . $meta['sizes']['thumbnail']['file'];
 			if(isset($meta['sizes']['medium'])) 	$delMedia[] = $dir . $meta['sizes']['medium']['file'];
 			
-			array_map('unlink', $delMedia);
+			array_map(function($media) {
+				if (file_exists($media)) {
+					unlink($media);
+				}
+			}, $delMedia);
+			
 			DB::delete('Delete from media where id = ?', [$media['id']]);
 			DB::delete('Delete from postmeta where meta_key = ? and meta_value = ?', ['_jmp_post_img', $media['id']]);
 		}
@@ -186,4 +191,5 @@ class MediaController extends Controller
 	{
 		return str_replace($delim, $prefix . $delim, $string);
 	}
+	
 }

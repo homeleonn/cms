@@ -87,6 +87,49 @@ function funkids_reviews(){
 	
 }
 
+addFilter('single_before_content', 'funkids_single_price');
+function funkids_single_price($post){
+	if (isset($post['_jmp_program_price']))
+		echo '<div class="price">', htmlspecialchars_decode($post['_jmp_program_price']), '</div><br>';
+}
+
+function funKids_catalogHeroes(){
+	// global $funKidsCacheFileNames, $thatCache;
+	// $thatCache = true;
+	// if(Common::getCache($funKidsCacheFileNames['catalog'], -1)) return;
+	// $heroes = (new PostController('program'))->actionList(NULL, NULL, 1, 30, [['created'], 'ASC']);
+	$heroes = funkids_getPostsByType('program', 30);
+	// dd($heroes);
+	$heroes = array_reverse($heroes);
+	$heroesImgs = [];
+	foreach($heroes as $h){
+		$heroesImg = postImgSrc($h, 'medium');
+		?>
+		<article class="item"><a href="<?=$h->permalink?>"><?=$h->short_title ?? $h->title?></a>
+			<div class="preview center">
+				<noscript><img src="<?=$heroesImg?>" alt="<?=$h->title?>" /></noscript>
+				<div class="inline-title"><h1><?=$h->short_title ?? $h->title?></h1></div><?=strip_tags(mb_substr($h->content, 0 ,200)).'...'?>
+			</div>
+		</article>
+		<?php
+		
+		$heroesImgs[] = $heroesImg;
+	}
+	?>
+	<script>
+		$$(function(){
+			var heroesImgs = <?=json_encode($heroesImgs)?>;
+			$('.heroes-catalog .list').one('mouseover', function(){
+				$('.heroes-catalog > .list > article > .preview').each(function(i){
+					$(this).prepend('<img src="'+heroesImgs[i]+'">');
+				});
+			});
+		});
+	</script>
+	<?php
+	// echo Common::setCache($funKidsCacheFileNames['catalog']);
+}
+
 function funkids_readyToHolyday(){
 ?>
 <div class="holyday" id="holyday">
