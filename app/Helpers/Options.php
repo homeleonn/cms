@@ -2,10 +2,11 @@
 
 namespace App\Helpers;
 
+use Exception;
+
 class Options
 {
 	private $options = [];
-	private $dinamic = ['optionsLoad'];
 	private $started = false;
 	private $optionsPath;
 	
@@ -14,7 +15,7 @@ class Options
 		if ($this->started) return false;
 		
 		if (!file_exists($optionsPath)) {
-			throw new \Exception('Options file not exists');
+			throw new Exception('Options file not exists');
 		}
 		
 		$this->started 		= true;
@@ -22,24 +23,45 @@ class Options
 		$this->options 		= array_merge($this->options, require $this->optionsPath);
 	}
 	
-	public function set(string $key, $value): void
+	public function set(string $key, $value = null): void
 	{
-		$this->options[$key] = $value;
+		Arr::push($this->options, $key, $value);
 	}
 	
-	public function push(string $key, $value): void
+	public function push(string $key, $value = null): void
 	{
 		Arr::push($this->options, $key, $value);
 	}
 	
 	public function get(string $key, $decode = false)
 	{
-		if (!$this->has($key)) {
-			// throw new \Exception("Element '{$key}' not found");
-			return null;
+		
+		if (strpos($key, '.') === false) {
+			if (!$this->has($key)) {
+				return null;
+			}
+			
+			$res = $this->options[$key];
+		} else {
+			$keys 			= explode('.', $key);
+			$firstKeyPart 	= array_shift($keys);
+			
+			if (!isset($this->options[$firstKeyPart])) {
+				return null;
+			}
+			
+			$res = $this->options[$firstKeyPart];
+
+			foreach ($keys as $key) {
+				if (!isset($res[$key])) {
+					return null;
+				}
+				
+				$res = $res[$key];
+			}
 		}
 		
-		return $decode ? unserialize($this->options[$key]) : $this->options[$key];
+		return $decode ? unserialize($res) : $res;
 	}
 	
 	public function getAll()

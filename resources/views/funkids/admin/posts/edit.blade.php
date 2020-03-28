@@ -45,7 +45,7 @@
 			<input type="hidden" name="content" value="">
 				<div id="editors"><textarea class="visual" id="content" value="1" style="width: 100%;height: 600px;display: none; visibility:hidden;"><?=htmlspecialchars($post['content'])?></textarea></div>
 			</div>
-			<?php doAction('edit_post_after', $post);?>
+			<?php doAction('edit_post_after', $post, $postOptions);?>
 			@include('posts.sidebar.comments')
 			@include('posts.sidebar.extraFields')
 			<?=doAction('add_extra_rows', $postOptions['type']);?>

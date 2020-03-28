@@ -2,127 +2,11 @@
 
 use App\Helpers\PostsTypes;
 
-
 if (!function_exists('isAdminSide')) {
 	function isAdminSide() {
 		return isset($_SERVER['REQUEST_URI']) && (strpos($_SERVER['REQUEST_URI'], '/admin') === 0);
 	}
 }
-
-
-
-addPageType('page', [
-		'type' => 'page',
-		'title' => '',
-		'title_for_admin' => 'Страницы',
-		'description' => 'Страницы',
-		'add' => 'Добавить страницу',
-		'edit' => 'Редактировать страницу',
-		'delete' => 'Удалить страницу',
-		'common' => 'страниц',
-		'hierarchical' => true,
-		'has_archive'  => false,
-		'taxonomy' => [],
-		'rewrite' => ['slug' =>'', 'with_front' => true, 'paged' => false],
-]);
-
-
-
-addPageType('post', [
-		'type' => 'post',
-		'title' => 'Блог',
-		'h1' => 'Блог',
-		'title_for_admin' => 'Статьи',
-		'description' => 'Блог',
-		'add' => 'Добавить статью',
-		'edit' => 'Редактировать статью',
-		'delete' => 'Удалить статью',
-		'common' => 'статей',
-		'hierarchical' => false,
-		'has_archive'  => 'blog',
-		'taxonomy' => [
-			'category' => [
-				'title' => 'Категория',
-				'add' => 'Добавить категорию',
-				'edit' => 'Редактировать категорию',
-				'delete' => 'Удалить категорию',
-				'hierarchical' => false,
-			],
-			'tag' => [
-				'title' => 'Тег',
-				'add' => 'Добавить тег',
-				'edit' => 'Редактировать тег',
-				'delete' => 'Удалить тег',
-				'hierarchical' => true,
-			],
-		],
-		'rewrite' => ['slug' => 'blog/%category%', 'with_front' => false, 'paged' => 20],
-]);
-
-addPageType('program', [
-		'type' => 'program',
-		'title' => 'Программы',
-		'_seo_title' => 'Детские аниматоры на день рождения Одесса, утренник, выпускной. Пригласить аниматора для ребенка',
-		'h1' => 'Аниматоры, шоу программы на детский праздник в Одессе',
-		'title_for_admin' => 'Программы',
-		'description' => 'Заказать детского аниматора на день рождения ребенка на дом либо на утренник или выпускной в Одессе, широкий выбор аниматоров и шоу программы, а так же красочные детские ведущие, которые порадуют детей интересными конкурсами и подарят массу ярких впечатлений. Все останутся довольны. Заказать аниматора для ребенка на праздник. Цена',
-		'add' => 'Добавить программу',
-		'edit' => 'Редактировать программу',
-		'delete' => 'Удалить программу',
-		'common' => 'программ',
-		'hierarchical' => false,
-		'has_archive'  => 'programs',
-		'rewrite' => ['slug' => 'programs', 'with_front' => false, 'paged' => 30],
-		// 'taxonomy' => [
-			// 'age' => [
-				// 'title' => 'Возрастная категория',
-				// 'add' => 'Добавить возрастную категорию',
-				// 'edit' => 'Редактировать возрастную категорию',
-				// 'delete' => 'Удалить возрастную категорию',
-				// 'hierarchical' => true,
-			// ],
-			// 'gen' => [
-				// 'title' => 'Пол ребенка',
-				// 'add' => 'Добавить возрастную категорию',
-				// 'edit' => 'Редактировать возрастную категорию',
-				// 'delete' => 'Удалить возрастную категорию',
-				// 'hierarchical' => true,
-			// ],
-		// ]
-]);
-
-addPageType('service', [
-		'type' => 'service',
-		'title' => 'Доп. услуги',
-		'_seo_title' => 'Дополнительные услуги | Funkids',
-		'h1' => 'Дополнительные услуги',
-		'title_for_admin' => 'Доп. услуги',
-		'description' => 'Дополнительные услуги на детский праздник, мыльные пузыри, сладкая вата, всё что бы разнообразить праздничный день, запоминающиеся мгновения жизни ребенка | FunKids',
-		'add' => 'Добавить услугу',
-		'edit' => 'Редактировать услугу',
-		'delete' => 'Удалить услугу',
-		'common' => 'услуг',
-		'hierarchical' => false,
-		'has_archive'  => 'services',
-		'rewrite' => ['slug' => 'services', 'with_front' => false, 'paged' => 20],
-]);
-
-addPageType('review', [
-		'type' => 'review',
-		'title' => 'Отзывы',
-		'_seo_title' => 'Отзывы | Funkids',
-		'h1' => 'Отзывы наших клиентов',
-		'title_for_admin' => 'Отзывы',
-		'description' => 'Отзывы | FunKids',
-		'add' => 'Добавить отзыв',
-		'edit' => 'Редактировать отзыв',
-		'delete' => 'Удалить отзыв',
-		'common' => 'Отзывы',
-		'hierarchical' => false,
-		'has_archive'  => 'reviews',
-		'rewrite' => ['slug' => 'reviews', 'with_front' => false, 'paged' => 20],
-]);
-
 
 function addPageType(string $type, array $options){
 	PostsTypes::set($type, $options);
@@ -162,7 +46,7 @@ function addPageType(string $type, array $options){
 	
 	
 	if (isAdminSide() || !isset($_SERVER['REQUEST_URI'])) {
-		Route::group(['prefix' => 'admin', 'namespace' => 'Admin', 'middleware' => 'web'], function() use ($type){
+		Route::group(['prefix' => 'admin', 'namespace' => 'App\Http\Controllers\Admin', 'middleware' => 'web'], function() use ($type){
 			Route::get($type, 'PostController@actionIndex')->name("{$type}.index");
 			Route::post($type, 'PostController@actionStore')->middleware('web')->name("{$type}.store");
 			Route::get($type.'/create', 'PostController@actionCreate')->name("{$type}.create");
@@ -179,7 +63,4 @@ function addPageType(string $type, array $options){
 			Route::get($type . '/term/{term}/edit', 'PostController@actionTermEdit')->name("{$type}.term_edit");
 		});
 	}
-				
-	
-	
 }

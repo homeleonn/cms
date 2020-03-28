@@ -5,7 +5,7 @@
 @include('layouts.errors')
 	
 <?//=dd(get_defined_vars())?>
-<?//=doAction('admin_post_options_form');?>
+<?=doAction('admin_post_options_form');?>
 <h2>{{$postOptions['add'] ?? $postOptions['title'] . ' add'}}</h2>
 {{ 
 	Form::open([
@@ -32,7 +32,7 @@
 			<input type="hidden" name="content" value="">
 			<div id="editors"><textarea class="visual" id="content" value="" style="width: 100%;height: 600px;display: none; visibility:hidden;">{{ old('content') }}</textarea></div>
 		</div>
-		<?php doAction('add_post_after', $post);?>
+		<?php doAction('add_post_after', $post, $postOptions);?>
 		@include('posts.sidebar.comments')
 		@include('posts.sidebar.extraFields')
 		<?=doAction('add_extra_rows', $postOptions['type']);?>

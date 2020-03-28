@@ -195,9 +195,9 @@ class Arr{
 		
 		foreach ($array as $a) {
 			
-			if (!is_array($a)) {
-				$a = (array)$a;
-			}
+			// if (!is_array($a)) {
+				// $a = (array)$a;
+			// }
 			
 			if ($distinct) {
 				if (!isset($k[$a[$key]])) {

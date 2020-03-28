@@ -1016,7 +1016,7 @@ body.loaded .plain{
 }
 
 footer.index > .plain{
-	margin-top: -50px;
+	/* margin-top: -50px; */
 }
 
 footer .top{

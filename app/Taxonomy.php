@@ -13,7 +13,6 @@ class Taxonomy extends Model
 	protected $fillable = ['term_id', 'taxonomy', 'description', 'parent', 'count'];
 	protected $table = 'term_taxonomy';
 	public $timestamps = false;
-	private $select = 'Select t.*, tt.* from terms as t, term_taxonomy as tt where t.id = tt.term_id and ';
 	private $postTypeTaxonomies;
 	private static $cache;
 	
@@ -30,9 +29,11 @@ class Taxonomy extends Model
 	public function getAll($where, $args)
 	{
 		static $cache;
+		
 		if (!isset($cache[$where])) {
-			$cache[$where] = DB::select($this->select . $where, $args);
+			$cache[$where] = DB::select('Select t.*, tt.* from terms as t, term_taxonomy as tt where t.id = tt.term_id and ' . $where, $args);
 		}
+		
 		return $cache[$where];
 	}
 	
@@ -50,15 +51,21 @@ class Taxonomy extends Model
 	public function filter(array $terms, string $by, string $taxonomy, $onlyOne = false)
 	{
 		$result = false;
+		
 		foreach ($terms as $term) {
-			if (!isset($term->$by)) return $result;
+			if (!isset($term->$by)) {
+				return $result;
+			}
+			
 			if ($term->$by == $taxonomy) {
 				if ($onlyOne) {
 					return $term;
 				}
+				
 				$result[] = $term;
 			}
 		}
+		
 		return $result;
 	}
 	
@@ -69,6 +76,7 @@ class Taxonomy extends Model
 				return $term['taxonomy'];
 			}
 		}
+		
 		return false;
 	}
 	
@@ -77,16 +85,6 @@ class Taxonomy extends Model
 		return $this->relation()
 					->whereIn('tr.object_id', $objectsIds)
 					->get()->toArray();
-	}
-	
-	public function byObjectsIds($objectsIds, $added = null)
-	{
-		
-	}
-	
-	public function byTaxonomies($taxonomies, $added = null)
-	{
-		
 	}
 	
 	public function relation()
@@ -100,7 +98,11 @@ class Taxonomy extends Model
 	public function getByTaxonomies($taxonomies = NULL)
 	{
 		$taxonomies = $taxonomies ?: (PostsTypes::get('taxonomy') ? array_keys(PostsTypes::get('taxonomy')) : null);
-		if (empty($taxonomies)) return [];
+		
+		if (empty($taxonomies)) {
+			return [];
+		}
+		
 		if (($cache = self::cache($taxonomies)) === NULL) {
 			self::cache($taxonomies, DB::select('Select t.*, tt.* from terms as t, term_taxonomy as tt where t.id = tt.term_id and tt.taxonomy IN('.Arr::getCountItemsLikeQuestionsMark($taxonomies).')', $taxonomies));
 		}
@@ -110,7 +112,10 @@ class Taxonomy extends Model
 	
 	public static function cache($key, $value = NULL)
 	{
-		if (is_array($key)) $key = implode(',', $key);
+		if (is_array($key)) {
+			$key = implode(',', $key);
+		}
+		
 		if ($value === NULL) {
 			return isset(self::$cache[$key]) ? self::$cache[$key] : NULL;
 		} else {

@@ -14,8 +14,6 @@
 
 DB::connection()->enableQueryLog();
 
-require dirname(__DIR__) . '/app/functions/posttypes.php';
-
 Route::get('/', 'PostController@actionIndex')->name('index');
 
 if (isAdminSide() || !isset($_SERVER['REQUEST_URI'])) {

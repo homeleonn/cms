@@ -59,8 +59,7 @@ class SettingController
 	
 	public function actionCacheClear()
 	{
-		// dd(uploads_path());
-		if ($objs = glob(uploads_path() . "/cache/*")) {
+		if ($objs = glob(uploads_path() . "cache/*")) {
 			foreach ($objs as $obj) {
 				if (is_dir($obj)) {
 					do_rmdir($obj);

@@ -15,14 +15,15 @@ class ProjectInitialization
      */
     public function handle($request, Closure $next)
     {
-		if (\Options::get('cache_enable')) {
-			if ($cache = getCache()) {
+		
+		if (!isAdminSide() && \Options::get('cache_enable')) {
+			if ($cache = getCache(null, -1, false)) {
 				return response($cache);
 			}
 			
 			$response = $next($request);
 			
-			setCache($response->getContent());
+			setCache(null, $response->getContent());
 		} else {
 			$response = $next($request);
 		}

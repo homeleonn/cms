@@ -3,46 +3,34 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-
-use DB;
+use Illuminate\Support\Facades\DB;
 use App\Helpers\{Arr, Options};
 
 class Post extends Model
 {
     protected $fillable = ['title', 'slug', 'short_title', 'content', 'post_type', 'parent', 'author', 'status', 'comment_status'];
-	public $select = 'Select * from posts where ';
 	private $relationship = 'posts p, terms t, term_taxonomy tt, term_relationships tr where t.id = tt.term_id and tt.term_taxonomy_id = tr.term_taxonomy_id and p.id = tr.object_id ';
 	private $allItemsCount;
 	private $limit;
-	private $offSet = 0;
+	private $offset;
 	public $taxonomy;
-	
+	public $postOptions;
+
 	public function __construct(...$args)
 	{
 		parent::__construct(...$args);
-		$this->taxonomy = new \App\Taxonomy;
+		$this->taxonomy = new Taxonomy;
 	}
-	
+
 	public function single($slug, $id = NULL)
 	{
 		return $id  ? self::find($id) 
 					: self::where('slug', $slug)->first();
 	}
-	
-	public function getPostById($id)
-	{
-		return self::find(6);
-		// return DB::table('posts')->($this->select . 'id = ?i', $id);
-	}
-	
-	public function getPostByUrl($url)
-	{
-		return $this->db->getRow($this->select . 'url = ?s', $url);
-	}
 
     public function getByType($type, $orderBy = false)
 	{
-		$query = $this->select . 'post_type = ? order by created_at DESC';
+		$query = 'Select * from `posts` where post_type = ? order by created_at DESC';
 		return $this->getAll($query, [$type]);
 	}
 	
@@ -61,7 +49,7 @@ class Post extends Model
 	public function getMeta($img = false)
 	{
 		if (!$meta = $this->getRawMeta($this->id)) {
-			return $post;
+			return;
 		}
 		$postMetaData = [];
 		
@@ -100,20 +88,20 @@ class Post extends Model
 	}
 	
 	
-	private function checkInLimit($query, $params, $count)
+	private function checkInLimit($query, $params, $count = null)
 	{
 		$from 	= ['Select *', 'Select distinct p.*'];
 		$to 	= ['Select COUNT(*) as count', 'Select COUNT(p.id) as count'];
-		$this->allItemsCount = DB::select(str_replace($from, $to, $query), $params);
+		$this->allItemsCount = selectOne(str_replace($from, $to, $query), $params);
 		
-		if (!$this->allItemsCount || $this->allItemsCount[0]->count <= $this->getOffset()) {
+		if (!$this->allItemsCount || $this->allItemsCount <= $this->getOffset()) {
 			redir(preg_replace('~page/\d+/?~', '', url()->current()));
 		}
 	}
 	
 	public function getAllItemsCount()
 	{
-		return $this->allItemsCount[0]->count;
+		return $this->allItemsCount;
 	}
 	
 	public function getOffset()

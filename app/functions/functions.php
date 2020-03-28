@@ -1,6 +1,6 @@
 <?php
 
-use App\Helpers\{Arr, PostsTypes};
+use App\Helpers\{Arr, PostsTypes, Cache};
 
 const FUNC_DEFINED = TRUE;
 
@@ -31,65 +31,20 @@ function requestUri(){
 }
 
 function cache_dir(){
-	return uploads_path() . '/cache/front/';
+	return uploads_path() . 'cache/front/';
 }
 
 function cache_path(){
 	return cache_dir() . md5(requestUri()) . '.html';
 }
 
-function setCache($data){
-	file_put_contents(cache_path(), $data);
+function getCache($filename = null, $delay = 86400, $outNow = true){
+	return Cache::get($filename, $delay, $outNow);
 }
 
-function getCache(){
-	if (file_exists(cache_path())) {
-		return file_get_contents(cache_path());
-	}
-	return false;
+function setCache($filename = null, $data = null){
+	return Cache::set($filename, $data);
 }
-
-class _Cache
-{
-	public static function getCache($cacheFileName, $delay = 86400, $outNow = true){
-		if (!Options::get('cache_enable')) return false;
-		$cacheFileName = cache_dir() . $cacheFileName . '.html';
-		
-		if (file_exists($cacheFileName))
-		{
-			if ($delay == -1 || (filemtime($cacheFileName) > time() - $delay)) {
-				if (($data = file_get_contents($cacheFileName)) === FALSE) return false;
-				
-				if ($data != '') {
-					if ($outNow) {
-						echo $data;
-					} else {
-						return $data;
-					}   
-					return true;
-				}
-			}
-		}
-		ob_start();
-		return false;
-	}
-
-	public static function setCache($cacheFileName, $data = false){
-		// if (!$data) $data = ob_get_clean();
-		// if (!Options::get('cache_enable')) return $data;
-		if (!Options::get('cache_enable')) return false;
-		$data = ob_get_clean();
-		$cacheFileName = cache_dir() . $cacheFileName . '.html';
-		
-		if (!is_dir($dir = dirname($cacheFileName))) {
-			mkdir($dir, 0755, true);
-		}
-		
-		file_put_contents($cacheFileName, $data, LOCK_EX);
-		return $data;
-	}
-}
-
 
 if (!function_exists('array_key_first')) {
     function array_key_first(array $arr) {
@@ -100,6 +55,22 @@ if (!function_exists('array_key_first')) {
     }
 }
 
+
+function getPostOptionsByType($postType) {
+	return PostsTypes::get(null, $postType);
+}
+
+function getOption($optionName) {
+	return Options::get($optionName);
+}
+
+function setOption($optionName, $value = null) {
+	return Options::set($optionName, $value);
+}
+
+function clearCache($filename) {
+	return Cache::clear($filename);
+}
 
 
 
@@ -232,7 +203,7 @@ function urlWithoutParams(){
 
 function viewWrap($templateFileName, $post, $args = null){
 	if (isset($post['_jmp_post_template']) && $post['_jmp_post_template']) {
-		$templateFileName = str_replace('.blade.php', '', $post['_jmp_post_template'], );
+		$templateFileName = str_replace('.blade.php', '', $post['_jmp_post_template']);
 	} elseif (isset($post['post_type']) && file_exists($filename = themeDir() . $post['post_type'] . '.blade.php')) {
 		$templateFileName = $post['post_type'];	
 	}
@@ -257,9 +228,7 @@ EOT;
 function getMenu() {
 	// $cacheFileName = 'menu/menu';
 	// if(Common::getCache($cacheFileName, -1)) return;
-	
-	// $cats = DI::getD('db')->getAll('Select * from menu where menu_id = '.Common::getOption('menu_active_id').' ORDER BY sort, parent');
-	// $cats = DB::table('menu')->where('menu_id', \Options::get('menu_active_id'))->orderBy('sort, parent');
+
 	$cats = App\Admin\Menu::where('menu_id', \Options::get('menu_active_id'))->orderByRaw('sort, parent')->get();
 	// dd($cats);
 	if(!$cats) return;
@@ -484,12 +453,6 @@ function textSanitize($content, $type = 'title', $tagsOn = false) {
 	// }
 	
 	return $content;
-}
-
-function clearCache($cacheFileName){
-	if(is_file($cacheFileName = uploads_path() . 'cache/' . $cacheFileName . '.html')){
-		unlink($cacheFileName);
-	}
 }
 
 function expandDumpOnKeyDown() {

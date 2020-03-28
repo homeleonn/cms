@@ -9,7 +9,7 @@
 		<div class="heroes-catalog">
 			<div class="ribbon"><div class="title center ribbon-content">КАТАЛОГ ГЕРОЕВ</div></div>
 			<div class="list">
-				<?=funKids_catalogHeroes()?>
+				<?php $heroes = funKids_catalogHeroes()?>
 			</div>
 		</div>
 	</div>
@@ -30,7 +30,7 @@
 	
 	<noindex>
 	<div class="container">
-		<?//=funkids_inProgram()?>
+		<?=funkids_inProgram()?>
 	</div>
 	</noindex>
 </div>
@@ -50,7 +50,7 @@
 	<div class="sep"></div>
 	
 	<?php //include $this->get('comments');?>
-	<?php //funKids_like($id)?>
+	<?php funKids_like($post->id, $heroes)?>
 	</noindex>
 </div>
 @endsection

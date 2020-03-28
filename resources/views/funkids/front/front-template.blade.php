@@ -14,7 +14,7 @@
 			<span class="upper"><div class="first-word">FunKids</div></span>
 		</div>
 	</div>
-	{!! funKids_getBlock('programs') !!}
+	{{funKids_getBlock('programs')}}
 <?php
 //funKids_popular();
 ?>
