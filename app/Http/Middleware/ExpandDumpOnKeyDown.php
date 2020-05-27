@@ -53,6 +53,7 @@ class ExpandDumpOnKeyDown
 		// $data = ob_get_clean();
 		// $response->setContent($content . $data);
         // return $response;
+		
 		return $next($request);
     }
 }

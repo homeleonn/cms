@@ -16,6 +16,10 @@ class EventServiceProvider extends ServiceProvider
         'App\Events\Event' => [
             'App\Listeners\EventListener',
         ],
+		
+		// 'auth.login' => [
+			// 'App\Events\AuthLoginEventHandler',
+		// ],
     ];
 
     /**
@@ -30,5 +34,19 @@ class EventServiceProvider extends ServiceProvider
 		// Event::listen('Illuminate\Database\Events\StatementPrepared', function ($event) {
             // $event->statement->setFetchMode(\PDO::FETCH_ASSOC);
         // });
+		
+		// Возникает при успешных входах...
+		// Event::listen('auth.login', function ($user, $remember) {
+			// dd(1);
+		// });
+		
+		Event::listen('Illuminate\Auth\Events\Login', function ($event) {
+			session(['user.accesslevel' => $event->user->accesslevel]);
+		});
+		
+		Event::listen('Illuminate\Auth\Events\Logout', function ($event) {
+			session()->forget('user');
+		});
+		
     }
 }

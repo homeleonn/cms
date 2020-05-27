@@ -31,4 +31,6 @@ return [
 
 	'_img' => '_jmp_post_img',
 
+	'posttypes' => 'a:1:{s:7:"program";a:4:{s:4:"name";s:18:"Программы";s:4:"type";s:7:"program";s:7:"archive";s:8:"programs";s:12:"hierarchical";i:0;}}',
+
 ];

@@ -23,7 +23,16 @@ function ddd(){
 }
 
 function isAdminSide(){
-	return isset($_SERVER['REQUEST_URI']) && (strpos($_SERVER['REQUEST_URI'], '/admin') === 0);
+	return 
+		isset($_SERVER['REQUEST_URI']) && 
+		(
+			(strpos($_SERVER['REQUEST_URI'], '/admin/') === 0) || 
+			(strlen($_SERVER['REQUEST_URI']) == 6 && (strpos($_SERVER['REQUEST_URI'], '/admin') === 0))
+		);
+}
+
+function isAdmin() {
+	return session('user.accesslevel') == 1;
 }
 
 function requestUri(){
@@ -213,15 +222,16 @@ function viewWrap($templateFileName, $post, $args = null){
 
 
 
-function jmpHead($post = null){
+function jmpHead($post = null) {
 	// global $post;
 	$post = applyFilter('jhead', $post);
+	
 	if (!isset($post['title'])) {
-		$post['title'] = 'no title';
+		$post['title'] = Options::get('title');
 	}
-echo <<<EOT
-<title>{$post['title']}</title>\n\t
-EOT;
+	
+	echo "<title>{$post['title']}</title>\n\t";
+
 	doAction('jhead', $post);
 }
 

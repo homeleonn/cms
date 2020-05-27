@@ -36,14 +36,18 @@ class Post extends Model
 	
     public function list()
 	{
-		if (!$posts = $this->getAllPosts()) abort(404);
+		if (!$posts = $this->getAllPosts()) {
+			abort(404);
+		}
+		
 		$addKeys = [];
-		if(!$this->postOptions['hierarchical']){
+		
+		if (!$this->postOptions['hierarchical']) {
 			// Get posts terms
-			$ids = Arr::column($posts, 'id');
-			$addKeys['_terms'] = $this->getTermsByPostsId($ids);
-			$this->_postTerms = $addKeys;
-			$this->_allTerms = $this->taxonomy->getByTaxonomies();
+			$ids 				= Arr::column($posts, 'id');
+			$addKeys['_terms'] 	= $this->getTermsByPostsId($ids);
+			$this->_postTerms 	= $addKeys;
+			$this->_allTerms 	= $this->taxonomy->getByTaxonomies();
 			// Cache::set('postTerms', $addKeys['_terms']);
 			
 			// Get all terms for post taxonomies for cache(build link)
@@ -78,15 +82,26 @@ class Post extends Model
 	public function hierarchyItems($items, $selfId = NULL, $parent = NULL, $addKeys = [])
 	{
 		// dd($items, empty($items), !count($items));
+		
 		if(empty($items) || !count($items)){
 			return [];
 		}
-		$isTerm = isset($items[0]->taxonomy);
+		// dd($items[0]);
+		if (isset($items[0]->taxonomy) && !$this->termIsHierarchical($items[0]->taxonomy)) {
+			return $items;
+		}
+		
 		foreach ($items as $item) {
-			if ($item->id == $selfId) continue;
+			if ($item->id == $selfId) {
+				continue;
+			}
+			
 			if (!empty($addKeys)) {
 				foreach ($addKeys as $key => $values) {
-					if (!$values) break;
+					if (!$values) {
+						break;
+					}
+					
 					if (isset($addKeys[$key][$item->id])) {
 						$item[$key] = $addKeys[$key][$item->id];
 						unset($addKeys[$key][$item->id]);
@@ -95,13 +110,18 @@ class Post extends Model
 					}
 				}
 			}
+			
 			$itemsToParents[$item->parent ?? 0][] = $item;
 		}
 		
-		if (!isset($itemsToParents)) return [];
+		if (!isset($itemsToParents)) {
+			return [];
+		}
+		
 		ksort($itemsToParents);
 		$itemsToParents = array_reverse($itemsToParents, true);
-		if ($this->postOptions['hierarchical'] || $isTerm) {
+		
+		if ($this->postOptions['hierarchical']) {
 			foreach ($itemsToParents as &$items) {
 				foreach ($items as &$item) {
 					if (isset($itemsToParents[$item->id])) {
@@ -167,7 +187,8 @@ class Post extends Model
 		
 		if ($isPost) {
 			//$url = $item->slug;
-			$url = ($this->postOptions['hierarchical'] ? '/' . $urlHierarchy . '/' . $this->postOptions['has_archive'] . $item->slug . '/' : ($buildLinkFlag ? $item->slug : '/' . $this->postOptions['has_archive'] . '/' . $item->slug . '/'));
+			// dd($urlHierarchy);
+			$url = ($this->postOptions['hierarchical'] ? url('/') . '/' . ($urlHierarchy ? $urlHierarchy  . '/' : '') . $this->postOptions['has_archive'] . $item->slug . '/' : ($buildLinkFlag ? $item->slug : '/' . $this->postOptions['has_archive'] . '/' . $item->slug . '/'));
 		} else {
 			$url = '/' . $this->postOptions['has_archive'] . '/' . $item->taxonomy . '/' . $urlHierarchy . $item->slug . '/' ;
 		}
@@ -210,7 +231,7 @@ class Post extends Model
 								$termLinks .= '<a href="'. url('/') . '/' . preg_replace('~%.*%~', $term->taxonomy, $this->postOptions['rewrite']['slug']) . '/' . $term->slug . '/">'.$term->name.'</a>, ';
 							}
 							
-							echo substr($termLinks, 0, -2) . '</td>';
+							echo rtrim($termLinks, ',') . '</td>';
 						}
 					}
 					
@@ -378,11 +399,19 @@ class Post extends Model
 	{
 		$term = \DB::select('Select t.*, tt.* from terms as t, term_taxonomy as tt where t.id = tt.term_id and t.id = ?', [$id])[0];
 		$itemsToParents = $this->hierarchyItems($this->getAllTerms($term->taxonomy), $term->id);
-		$data['listForParents'] = $this->htmlSelectForParentHierarchy($this->hierarchy($itemsToParents, 'select', $term->parent));
+		
+		if ($this->termIsHierarchical($term->taxonomy)) {
+			$data['listForParents'] = $this->htmlSelectForParentHierarchy($this->hierarchy($itemsToParents, 'select', $term->parent));
+		}
+		
 		$data['term'] = $term;
 		
 		return $data;
-		
+	}
+	
+	public function termIsHierarchical($currentTaxonomy)
+	{
+		return isset($this->postOptions['taxonomy']) && isset($this->postOptions['taxonomy'][$currentTaxonomy]) && $this->postOptions['taxonomy'][$currentTaxonomy]['hierarchical'];
 	}
 	
 	public function getAllTerms($taxonomies){
@@ -441,7 +470,10 @@ class Post extends Model
 	{
 		$data['taxonomy'] 		= $data['add'] = $term;
 		$itemsToParents 		= $this->hierarchyItems($this->getAllTerms($term));
-		$data['listForParents'] = $this->htmlSelectForParentHierarchy($this->hierarchy($itemsToParents));
+		
+		if ($this->termIsHierarchical($term)) {
+			$data['listForParents'] = $this->htmlSelectForParentHierarchy($this->hierarchy($itemsToParents));
+		}
 		
 		return $data;
 	}
@@ -449,18 +481,6 @@ class Post extends Model
 	
 	public function s($key, $value) 
 	{
-		// $keys = explode('.', $key);
-		// $countKeys = count($keys);
-		// if ($countKeys == 1) {
-			// $this->attributes[$keys[0]] = $value;
-		// } elseif ($countKeys == 2) {
-			// $this->attributes[$keys[0]][$keys[1]] = $value;
-		// } elseif ($countKeys == 3) {
-			// $this->attributes[$keys[0]][$keys[1]][$keys[2]] = $value;
-		// } elseif ($countKeys == 4) {
-			// $this->attributes[$keys[0]][$keys[1]][$keys[2]][$keys[3]] = $value;
-		// }
-		
 		Arr::push($this->attributes, $key, $value);
 	}
 	
@@ -489,8 +509,13 @@ class Post extends Model
 				$post->_jmp_post_img_meta = unserialize($media['meta']);
 				
 			}
+			
 			$post[$m['meta_key']] = $m['meta_value'];
-			if (mb_substr($m['meta_key'], 0, 1) == '_') continue;
+			
+			if (mb_substr($m['meta_key'], 0, 1) == '_') {
+				continue;
+			}
+			
 			$metadata[$m['meta_key']] = $m['meta_value'];
 		}
 		

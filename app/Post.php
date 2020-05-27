@@ -22,15 +22,9 @@ class Post extends Model
 		$this->taxonomy = new Taxonomy;
 	}
 
-	public function single($slug, $id = NULL)
-	{
-		return $id  ? self::find($id) 
-					: self::where('slug', $slug)->first();
-	}
-
     public function getByType($type, $orderBy = false)
 	{
-		$query = 'Select * from `posts` where post_type = ? order by created_at DESC';
+		$query = 'Select * from `posts` where `post_type` = ? order by `created_at` DESC';
 		return $this->getAll($query, [$type]);
 	}
 	
@@ -51,6 +45,7 @@ class Post extends Model
 		if (!$meta = $this->getRawMeta($this->id)) {
 			return;
 		}
+		
 		$postMetaData = [];
 		
 		foreach ($meta as $m) {
@@ -59,8 +54,13 @@ class Post extends Model
 				$m->meta_value = $media->src;
 				$this->_jmp_post_img_meta = unserialize($media->meta);
 			}
+			
 			$this->{$m->meta_key} = $m->meta_value;
-			if (strpos($m->meta_key, '_') === 0) continue;
+			
+			if (strpos($m->meta_key, '_') === 0) {
+				continue;
+			}
+			
 			$postMetaData[$m->meta_key] = $m->meta_value;
 		}
 		

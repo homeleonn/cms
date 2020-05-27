@@ -28,29 +28,32 @@ class MediaController extends Controller
 	}
 	
 	public function actionAdd(){//echo(json_encode($_FILES));exit;
-		if(!isset($_FILES['files'])) return 0;
-		$files = $_FILES['files'];
-		$upDir = date('Y/m', time()) . '/';
-		$dir = uploads_path() . $upDir;
-		$urlDir = uploads_url() . $upDir;
-		$uploader = new Uploader($dir);
-		$thumbW = 150;
-		$thumbH = 150;
-		$mediumW = 320;
-		$mediumH = 320;
-		$thumbSrcList = [];
-		$insert = [];
-		$i = 0;
+		if(!isset($_FILES['files'])) {
+			return 0;
+		}
+		
+		$files 			= $_FILES['files'];
+		$upDir 			= date('Y/m', time()) . '/';
+		$dir 			= uploads_path() . $upDir;
+		$urlDir 		= uploads_url() . $upDir;
+		$uploader 		= new Uploader($dir);
+		$thumbW 		= 150;
+		$thumbH 		= 150;
+		$mediumW 		= 320;
+		$mediumH 		= 320;
+		$thumbSrcList 	= [];
+		$insert 		= [];
+		$i 				= 0;
 			
 		// Игнорим возникновение ошибок при ломаных изображениях
 		ini_set('gd.jpeg_ignore_warning', 1);
 		
-		while(isset($files['name'][$i])){
-			if($files['size'][$i] > 2 * 1024 * 1024){
+		while (isset($files['name'][$i])) {
+			if ($files['size'][$i] > 2 * 1024 * 1024) {
 				Msg::json(['error' => 'Изображение слишком большое, попробуйте сначала уменьшить размер']);
 			}
 			
-			if(($result = $uploader->img($files['tmp_name'][$i], $files['name'][$i])) !== false){
+			if (($result = $uploader->img($files['tmp_name'][$i], $files['name'][$i])) !== false) {
 				$src = $upDir . $result['new_name'];
 				$thumbSrcList[$i]['orig'] = $urlDir . $result['new_name'];
 				
@@ -62,7 +65,7 @@ class MediaController extends Controller
 				
 				
 				// Создаем миниатюру если ширина или высота больше предполагаемых размеров миниатюры
-				if($result['w'] > $thumbW || $result['h'] > $thumbH){
+				if ($result['w'] > $thumbW || $result['h'] > $thumbH) {
 					$thumbSrcList[$i]['thumb'] = $urlDir . $uploader->thumbCut($result['new_src'], $result['mime'], $result['w'], $result['h'], $thumbW, $thumbH);
 					
 					$meta['sizes']['thumbnail'] = [
@@ -74,7 +77,7 @@ class MediaController extends Controller
 				}
 				
 				// Ресайзим до средней ширины если ширина или высота больше предполагаемых размеров миниатюры
-				if($result['w'] > $mediumW || $result['h'] > $mediumH){
+				if ($result['w'] > $mediumW || $result['h'] > $mediumH) {
 					list($mediumName, $width, $height) = $this->resize($dir, $result['new_name'], $mediumW, $mediumH);
 					//$thumbSrcList[$i]['medium'] = $urlDir . $mediumName;
 					
@@ -88,12 +91,11 @@ class MediaController extends Controller
 				
 				$metaForMediaShow = $meta;
 				unset($metaForMediaShow['sizes']['thumbnail']);
-				$thumbSrcList[$i]['meta'] = json_encode($metaForMediaShow);
-				$thumbSrcList[$i]['dir'] = uploads_url() . $meta['dir'];
 				
-				$meta = serialize($meta);
-				
-				$insert[] = [$src, $files['name'][$i], $files['type'][$i], $meta];
+				$thumbSrcList[$i]['meta'] 	= json_encode($metaForMediaShow);
+				$thumbSrcList[$i]['dir'] 	= uploads_url() . $meta['dir'];
+				$meta 						= serialize($meta);
+				$insert[] 					= [$src, $files['name'][$i], $files['type'][$i], $meta];
 			}
 			
 			$i++;

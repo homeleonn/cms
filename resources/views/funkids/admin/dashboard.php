@@ -29,10 +29,11 @@ function getSections($type, $pageTypes){
 		$sections = array_merge($sections, 
 			//['Комментарии||comment' => 'comments'],
 			//['Пользователи||user' => 'users'],
+			['Меню||cog' => 'menu'],
 			['Плагины||cog' => 'plugins'],
 			['Настройки||cog' => [
 					'Общие' => 'settings',
-					'Меню' => 'menu',
+					'Типы страниц' => 'settings/posttypes',
 				]
 			]
 		);

@@ -15,18 +15,22 @@ class PostController extends Controller
 	private $launched;
 	private $template;
 	private $model;
-	private $postOptions;
+	public $postOptions;
 	private $breadcrumbs;
 	private $post;
 
 	public function run($type, $method = null, $args = null)
 	{
-		// dd(func_get_args(), get_defined_vars());
-		if ($this->launched) return;
+		if ($this->launched) {
+			return;
+		}
+		
 		$this->launched = true;
-		$this->img = Options::get('_img');
-		$this->model = new Post;
+		$this->img 		= Options::get('_img');
+		$this->model 	= new Post;
+		
 		PostsTypes::setCurrentType($type);
+		
 		$this->postOptions = $this->post = $this->model->postOptions = PostsTypes::getCurrent();
 		$this->breadcrumbs = [];
 		
@@ -38,6 +42,7 @@ class PostController extends Controller
     public function actionIndex()
 	{
 		$frontPage = Options::get('front_page');
+		
 		if (is_numeric($frontPage)) {
 			$this->run('page');
 			return $this->actionSingle(NULL, $frontPage);
@@ -47,6 +52,11 @@ class PostController extends Controller
 		}
     }
 	
+	public function actionCategory($categorySlug, $categoryId)
+	{
+		dd($categorySlug, $categoryId);
+	}
+	
 	public function last()
 	{
 		$this->template = 'front';
@@ -55,6 +65,7 @@ class PostController extends Controller
 	
 	public function actionSingle($slug, $id = null)
 	{
+//		dd(debug_backtrace(null, 10));
 		if ($id) {
 			$post = Post::findOrFail($id);
 		} else {
@@ -67,10 +78,10 @@ class PostController extends Controller
 		}
 		
 		$this->run($post->post_type);
-		$post->getMeta(true);
 		
 		// If this post is the front
 		if ($this->checkFrontPageAliase($post['id'])) {
+			$post->getMeta(true);
 			return viewWrap($this->getTemplate('single'), $post)->with('post', $post);
 		}
 		
@@ -87,8 +98,10 @@ class PostController extends Controller
 			}
 		}
 		
+		$post->getMeta(true);
 		$this->createBreadCrumbs($post);
 		$post = applyFilter('before_return_post', $post);
+		
 		return viewWrap($this->getTemplate('single'), $post)->with('post', $post);
 	}
 	
@@ -114,7 +127,8 @@ class PostController extends Controller
 		}
 	}
 	
-	private function checkHierarchy($slug, $parent, $hierarchy){//dd(func_get_args());
+	private function checkHierarchy($slug, $parent, $hierarchy)
+	{
 		if (!$parent) {
 			if ($hierarchy) abort(404);
 		} else {
@@ -131,16 +145,17 @@ class PostController extends Controller
 				if (count($parents) < count($hierarchy)) {
 					abort(404);
 				} else {
-					$h = array_reverse($hierarchy);
-					$tempParent = $parent;
-					$i = 0;
+					$h 				= array_reverse($hierarchy);
+					$tempParent 	= $parent;
+					$i 				= 0;
 					$addBreadCrumbs = [];
 					
 					foreach ($parents as $parent) {
 						if ($parent->id != $tempParent || $parent->slug != $h[$i]) {
 							abort(404);
 						}
-						$tempParent = $parent->parent;
+						
+						$tempParent 			= $parent->parent;
 						$addBreadCrumbs[$h[$i]] = $parent->short_title ?: $parent->title;
 						$i++;
 					}
@@ -149,7 +164,7 @@ class PostController extends Controller
 						abort(404);
 					}
 					
-					foreach(array_reverse($addBreadCrumbs) as $link => $title){
+					foreach (array_reverse($addBreadCrumbs) as $link => $title) {
 						$this->breadcrumbs[($link)] = $title;
 					}
 				}
@@ -167,6 +182,7 @@ class PostController extends Controller
 		
 		$hierarchy = $this->setHierarchy($itemsOnId, $parentId, $compare);
 		$hierarchy = implode('/', array_reverse(explode('|', substr($hierarchy, 0, -1))));
+		
 		return $hierarchy;
 	}
 	
@@ -202,7 +218,7 @@ class PostController extends Controller
 		} else {
 			// Get terms by post taxonomies
 			$terms = $this->model->taxonomy->getByTaxonomies(); 
-			[$termsOnId, $termsOnParent] 	= Arr::itemsOnKeys($terms, ['id', 'parent']);
+			[$termsOnId, $termsOnParent] = Arr::itemsOnKeys($terms, ['id', 'parent']);
 			
 			// Получим термины относящиеся к данной записи, которые привязаны к таксономиям данного типа записи
 			$postTerms = $this->model->getPostTerms($post['id'], array_keys($this->postOptions['taxonomy']));
@@ -234,7 +250,11 @@ class PostController extends Controller
 							: $this->getPostsWithoutTaxonomy();
 		
 		[$list, $termsFromExistsPost, $termsByPostsIds, $allTerms] = $result;
-		if (!$list) abort(404);
+		
+		if (!$list) {
+			abort(404);
+		}
+		
 		unset($result);
 		
 		$this->setPermalinkAndTerms($list, $termsByPostsIds, $termsFromExistsPost);
@@ -344,7 +364,10 @@ class PostController extends Controller
 	
 	private function getPostsWithoutTaxonomy()
 	{
-		if(!$posts = $this->model->getByType($this->postOptions['type'])) abort(404);
+		if (!$posts = $this->model->getByType($this->postOptions['type'])) {
+			abort(404);
+		}
+		
 		$termsFromExistsPost = !empty($this->postOptions['taxonomy']) ? $this->model->taxonomy->getAllByObjectsIds(array_keys(Arr::itemsOnKeys($posts, ['id']))) : [];
 		
 		$termsByPostsIds = $termsFromExistsPost ? Arr::itemsOnKeys($termsFromExistsPost, ['object_id']) : [];
@@ -357,32 +380,51 @@ class PostController extends Controller
 	
 	private function getPostsWithTaxonomy($taxonomy, $hierarchy)
 	{
-		$allTerms 				= $this->model->taxonomy->getByTaxonomies();
-		$termsFromExistsPost 	= $this->model->taxonomy->filter($allTerms, 'taxonomy', $taxonomy);
-		$lastChild 				= $hierarchy[count($hierarchy) - 1];
-		$findTerm 				= false;
+		$allTerms 						= $this->model->taxonomy->getByTaxonomies();
+		$termsFromExistsPost 			= $this->model->taxonomy->filter($allTerms, 'taxonomy', $taxonomy);
+		[$termsOnIds, $termsOnParents] 	= Arr::itemsOnKeys($allTerms, ['id', 'parent']);
+		
+		$currentTerm 					= $this->checkTaxonomyHierarchy($allTerms, $hierarchy, $termsOnIds);
+		$termsTaxonomyIds 				= $this->getTermIdsForTaxonomyArchive($termsOnParents, $currentTerm);
+		$posts 							= $this->model->getPostsBysTermsTaxonomyIds($termsTaxonomyIds);
+		$allTerms 						= $this->model->taxonomy->getAllByObjectsIds(
+			array_keys(Arr::itemsOnKeys($posts, ['id']))
+		);
+		$termsByPostsIds 				= Arr::itemsOnKeys($allTerms, ['object_id']);
+		
+		return [$posts, $termsFromExistsPost, $termsByPostsIds, $allTerms];
+	}
+	
+	private function checkTaxonomyHierarchy($allTerms, $hierarchy, $termsOnIds)
+	{
+		$lastChild = $hierarchy[count($hierarchy) - 1];
 		
 		// get current selected term to know whence build hierarchy
 		foreach ($allTerms as $term) {
 			if ($term->slug == $lastChild) {
 				$currentTerm = $term;
-				$findTerm = true;
 				break;
 			}
 		}
 		
-		if (!$findTerm) {
+		if (!isset($currentTerm)) {
 			abort(404);
 		}
 		
-		[$termsOnIds, $termsOnParents] = Arr::itemsOnKeys($allTerms, ['id', 'parent']);
-		$builtedTermsParentHierarchy = substr(str_replace('|', '/', Arr::builtHierarchyDown($termsOnIds, $currentTerm, 'slug') . '|' .$lastChild), 1);
+		$builtedTermsParentHierarchy = substr(str_replace('|', '/', Arr::builtHierarchyDown(
+			$termsOnIds, $currentTerm, 'slug'
+		) . '|' . $lastChild), 1);
 		
 		
 		if (implode('/', $hierarchy) != $builtedTermsParentHierarchy) {
 			redir($builtedTermsParentHierarchy);
 		}
 		
+		return $currentTerm;
+	}
+	
+	private function getTermIdsForTaxonomyArchive($termsOnParents, $currentTerm)
+	{
 		$toShow 			= $termsOnParents[$currentTerm->id] ?? NULL;
 		$termsTaxonomyIds[] = $currentTerm->term_taxonomy_id;
 		$i 					= 0;
@@ -397,11 +439,7 @@ class PostController extends Controller
 			$i++;
 		}
 		
-		$posts 				= $this->model->getPostsBysTermsTaxonomyIds($termsTaxonomyIds);
-		$allTerms 			= $this->model->taxonomy->getAllByObjectsIds(array_keys(Arr::itemsOnKeys($posts, ['id'])));
-		$termsByPostsIds 	= Arr::itemsOnKeys($allTerms, ['object_id']);
-		
-		return [$posts, $termsFromExistsPost, $termsByPostsIds, $allTerms];
+		return $termsTaxonomyIds;
 	}
 	
 	private function postTermsLink($termsOnId, $termsOnParent, $termsByPostId, $mergeKey = 'slug')
@@ -528,6 +566,53 @@ class PostController extends Controller
 		}
 		
 		return $html . '</div>';
+	}
+	
+	
+	public function archive($archive, $term, $termName, $page)
+	{
+		$this->postOptions1 = $this->getCurrentPostType($archive);
+		
+		dd($this->postOptions1, $archive);
+		
+		$posts = Post::where('post_type', $this->postOptions1['type'])->get();
+		
+		dd($archive, $term, $termName, $page, $this->postOptions1, func_get_args());
+		// $post
+	}
+	
+	private function getCurrentPostType($archive)
+	{
+		foreach (Options::get('posttypes_all') as $type => $options) {
+			if ($options['archive'] == $archive) {
+				return $options;
+			}
+		}
+	}
+	
+	public function archiveWithoutTerm($archive, $page = 1)
+	{
+//		dd($archive);
+		return $this->archive($archive, null, null, $this->pullPage($page));
+	}
+	
+	public function archiveWithTerm($archive, $term, $page = 1)
+	{
+		[,$term, $termName] = $this->pullTerm($term);
+		
+		return $this->archive($archive, $term, $termName, $this->pullPage($page));
+	}
+	
+	private function pullTerm($term)
+	{
+		preg_match('~^(category|tag)/(.*)$~', $term, $match);
+		
+		return $match;
+	}
+	
+	private function pullPage($page)
+	{
+		return is_numeric($page) ? $page : explode('/page/', $page)[1];
 	}
 }
 

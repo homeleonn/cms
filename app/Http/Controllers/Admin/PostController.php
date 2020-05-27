@@ -80,11 +80,11 @@ class PostController extends Controller
 		
 		if ($edit) {
 			if (!isset($fields['id'])) {
-				RedirBack();
+				redirBack();
 			}
 			
 			if (!isset($fields['slug'])) {
-				RedirBack('Псевдоним не должен быть пуст');
+				redirBack('Псевдоним не должен быть пуст');
 			}
 			
 			if (($id = $fields['id'] ?? null) && !$postFromDB = Post::find($id)) {
@@ -118,26 +118,35 @@ class PostController extends Controller
 			$post['id'] = $id;
 		}
 		
-		$extraFields = $fields['extra_fileds'] ?? [];
+		$extraFields = $this->fillExtraFields($fields);
 		
-		//fill extra fields
+		return [$post, $extraFields, ($postFromDB ?? null)];
+	}
+	
+	public function fillExtraFields($fields)
+	{
+		$extraFields	= $fields['extra_fileds'] ?? [];
 		$extraFieldKeys = [];
 		$extraFieldKeys = \applyFilter('extra_fields_keys', $extraFieldKeys);
 		
-		if(!$extraFieldKeys || !is_array($extraFieldKeys)) $extraFieldKeys = [];
+		// reset if user filters returns invalid value
+		if (!$extraFieldKeys || !is_array($extraFieldKeys)) {
+			$extraFieldKeys = [];
+		}
+		
 		$extraFieldKeys = array_merge($extraFieldKeys, [
 			'_jmp_post_template', 
 			Options::get('_img'),
 		]);
 		
-		foreach($extraFieldKeys as $key){
-			if(isset($fields[$key]) && $fields[$key]){
+		foreach ($extraFieldKeys as $key) {
+			if (isset($fields[$key]) && $fields[$key]) {
 				$extraFields[$key] = $fields[$key];
 				unset($fields[$key]);
 			}
 		}
 		
-		return [$post, $extraFields, ($postFromDB ?? null)];
+		return $extraFields;
 	}
 
 	
@@ -169,10 +178,8 @@ class PostController extends Controller
 			}
 			
 			$this->{$edit ? 'updateMeta' : 'insertMeta'}($post->id, $extraFields);
+			$post->relationship()->sync($receivedTermsIds ?: []);
 			
-			if ($receivedTermsIds) {
-				$post->relationship()->sync($receivedTermsIds);
-			}
 		DB::commit();
 		
 		return $post;
@@ -180,12 +187,10 @@ class PostController extends Controller
 	
 	private function metaFormatting($meta)
 	{
-		// $newMeta = new \stdClass();
 		$newMeta = [];
 		
 		foreach ($meta as $m) {
 			$newMeta[$m->meta_key] = $m->meta_value;
-			// $newMeta[$m['meta_key']] = $m['meta_value'];
 		}
 		
 		return $newMeta;
@@ -219,6 +224,7 @@ class PostController extends Controller
 							$updateKeys[] = $key;
 							array_push($placeholderValues, $key, $value);
 						}
+						
 						unset($extraFields[$key], $postMeta[$key]);
 					}
 				}
@@ -312,10 +318,6 @@ class PostController extends Controller
 	
 	public function actionDashboard()
 	{
-		// dd(Post::select('id'));
-		// dd(opcache_get_status());
-		// DB::beginTransaction();
-		// dd(Post::find(217)->fill(['slug' => '3333'])->save(), Post::create(['slug' => '4567']));
 		return view('index');
 	}
 	

@@ -12,15 +12,28 @@
 */
 
 
+//use Illuminate\Routing\Route;
+
+//use Symfony\Component\Routing\Annotation\Route;
+
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
+
 DB::connection()->enableQueryLog();
 
 Route::get('/', 'PostController@actionIndex')->name('index');
+Route::get('user', 'UserController@index')->name('user.index');
+Route::post('user/auth', 'UserController@auth')->name('user.auth');
+Route::post('user/logout', 'UserController@logout')->name('user.logout');
+Route::get('/{categorySlug}-c{categoryId}', 'PostController@actionCategory')->where(['categorySlug' => '([^/]*)', 'categoryId' => '(\d*)']);
+
 
 if (isAdminSide() || !isset($_SERVER['REQUEST_URI'])) {
 	Route::group(['prefix' => 'admin', 'namespace' => 'Admin'], function(){
 		// Route::resource('categories', 'CategoryController');
 		// Route::resource('post', 'PostController');
-		Route::get('/', 'PostController@actionDashboard')->name('admin.index')->middleware('web');
+		Route::get('/', 'PostController@actionDashboard')->name('admin.index');
 		
 		Route::get('changeOrder/{orderType}', 'PostController@actionChangeOrder')->name('changeOrder');
 		Route::post('changeOrderValue', 'PostController@actionChangeOrderValue')->name('changeOrderValue');
@@ -31,6 +44,8 @@ if (isAdminSide() || !isset($_SERVER['REQUEST_URI'])) {
 		
 		Route::get('settings', 'SettingController@actionIndex')->name('settings.index');
 		Route::post('settings/save', 'SettingController@actionSave')->name('settings.save');
+		Route::get('settings/posttypes', 'SettingController@actionTypes')->name('admin.posttypes.index');
+		Route::put('settings/posttypes/save', 'SettingController@actionTypesSave')->name('admin.posttypes.save');
 		
 		Route::match(['get', 'post'], 'menu', 'MenuController@actionIndex')->name('menu.index');
 		Route::post('menu/edit', 'MenuController@actionEdit')->name('menu.index');
@@ -41,11 +56,18 @@ if (isAdminSide() || !isset($_SERVER['REQUEST_URI'])) {
 		Route::get('plugins/settings/{pluginFoler}', 'PluginController@actionSettings')->name('plugin.index')->where('pluginFoler', '(.*)(/(.*))?');
 		
 		Route::post('user/clearcache/', 'SettingController@actionCacheClear')->name('cache.clear');
-		
+		Route::resource('category', 'TermController');
+		Route::resource('tag', 'TermController');
 	});
 	
 }
 
 
-Route::get('{slugMulti}', ['uses' => 'PostController@actionSingle'])->where('slugMulti', '[а-яА-ЯЁa-zA-Z0-9-\/]+');
 
+Auth::routes();
+
+Route::get('/home', 'HomeController@index')->name('home');
+
+
+
+Route::get('{slugMulti}', ['uses' => 'PostController@actionSingle'])->where('slugMulti', '[а-яА-ЯЁa-zA-Z0-9-\/]+');

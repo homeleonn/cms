@@ -41,6 +41,7 @@ class AppServiceProvider extends ServiceProvider
 		plugins(Options::get('plugins_activated', true));
 
 		require dirname(__DIR__) . '/functions/posttypes.php';
+		require dirname(__DIR__) . '/functions/posttypes1.php';
 		
 		require public_path() . '/themes/' . Options::get('theme') . '/functions.php';
 		
